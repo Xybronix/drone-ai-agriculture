@@ -149,13 +149,39 @@ async def get_stats(
     start_date: Optional[datetime] = Query(None, description="Start date"),
     end_date: Optional[datetime] = Query(None, description="End date"),
     field_id: Optional[str] = Query(None, description="Filter by field ID"),
-    session: AsyncSession = Depends(get_session)
+    all_users: Optional[bool] = Query(False, description="Include all users' data (super admin only)"),
+    session: AsyncSession = Depends(get_session),
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
     """
     Get aggregated statistics for analyses.
+    Regular users see only their own data.
+    Super admin can use all_users=true to see all users' data.
     """
+    from api.database import User
+    
     # Build base filter
     filters = []
+    
+    # Filter by user - super admin can see all if all_users=true, otherwise only their own
+    if current_user:
+        if not all_users or not current_user.is_super_admin:
+            # Regular users or super admin viewing own data
+            filters.append(Analysis.user_id == current_user.id)
+        # If all_users=true and is_super_admin, no user filter (see all)
+    else:
+        # Guest mode - return empty stats
+        return {
+            "total_analyses": 0,
+            "plants_detected": 0,
+            "detection_rate": 0,
+            "health_distribution": {},
+            "species_distribution": {},
+            "growth_stage_distribution": {},
+            "avg_processing_time_ms": 0,
+            "daily_analyses": []
+        }
+    
     if start_date:
         filters.append(Analysis.timestamp >= start_date)
     if end_date:

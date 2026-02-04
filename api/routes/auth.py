@@ -257,6 +257,7 @@ async def get_me(user: User = Depends(get_current_user)):
         "username": user.username,
         "email": user.email,
         "is_admin": user.is_admin,
+        "is_super_admin": user.is_super_admin,
         "created_at": user.created_at,
         "last_login": user.last_login
     }
@@ -368,3 +369,181 @@ async def generate_drone_token(
         "token": token,
         "expires_in": 365 * 24 * 3600
     }
+
+
+@router.get(
+    "/users",
+    summary="List all users (super admin only)"
+)
+async def list_users(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    List all users. Super admin only.
+    """
+    if not user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    result = await session.execute(select(User).order_by(User.created_at.desc()))
+    users = result.scalars().all()
+    
+    return [
+        {
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "is_active": u.is_active,
+            "is_admin": u.is_admin,
+            "is_super_admin": u.is_super_admin,
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "last_login": u.last_login.isoformat() if u.last_login else None
+        }
+        for u in users
+    ]
+
+
+@router.get(
+    "/users/{user_id}",
+    summary="Get user details (super admin only)"
+)
+async def get_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Get details of a specific user. Super admin only.
+    """
+    if not current_user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    result = await session.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    
+    if not u:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Utilisateur non trouvé"
+        )
+    
+    return {
+        "id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "is_active": u.is_active,
+        "is_admin": u.is_admin,
+        "is_super_admin": u.is_super_admin,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
+        "last_login": u.last_login.isoformat() if u.last_login else None
+    }
+
+
+@router.put(
+    "/users/{user_id}",
+    summary="Update user (super admin only)"
+)
+async def update_user(
+    user_id: int,
+    is_active: Optional[bool] = None,
+    is_admin: Optional[bool] = None,
+    is_super_admin: Optional[bool] = None,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Update user properties. Super admin only.
+    Cannot modify own super_admin status.
+    """
+    if not current_user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    result = await session.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    
+    if not u:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Utilisateur non trouvé"
+        )
+    
+    # Cannot modify own super_admin status
+    if u.id == current_user.id and is_super_admin is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous ne pouvez pas modifier votre propre statut de super administrateur"
+        )
+    
+    if is_active is not None:
+        u.is_active = is_active
+    if is_admin is not None:
+        u.is_admin = is_admin
+    if is_super_admin is not None:
+        u.is_super_admin = is_super_admin
+    
+    await session.commit()
+    
+    logger.info(f"User {u.username} updated by {current_user.username}")
+    
+    return {
+        "id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "is_active": u.is_active,
+        "is_admin": u.is_admin,
+        "is_super_admin": u.is_super_admin,
+        "message": "Utilisateur mis à jour avec succès"
+    }
+
+
+@router.delete(
+    "/users/{user_id}",
+    summary="Delete user (super admin only)"
+)
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Delete a user. Super admin only.
+    Cannot delete own account.
+    """
+    if not current_user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    result = await session.execute(select(User).where(User.id == user_id))
+    u = result.scalar_one_or_none()
+    
+    if not u:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Utilisateur non trouvé"
+        )
+    
+    # Cannot delete own account
+    if u.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous ne pouvez pas supprimer votre propre compte"
+        )
+    
+    username = u.username
+    await session.delete(u)
+    await session.commit()
+    
+    logger.info(f"User {username} deleted by {current_user.username}")
+    
+    return {"message": f"Utilisateur {username} supprimé avec succès"}
