@@ -1,0 +1,63 @@
+{
+  "model_name": "agriculture_model",
+  "backbone": "efficientnet",
+  "num_classes": 25,
+  "class_names": [
+    "Black-grass",
+    "Charlock",
+    "Cleavers",
+    "Common Chickweed",
+    "Common wheat",
+    "Fat Hen",
+    "Loose Silky-bent",
+    "Maize",
+    "Pepper__bell___Bacterial_spot",
+    "Pepper__bell___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight",
+    "Potato___healthy",
+    "Scentless Mayweed",
+    "Shepherd\u0393\u00c7\u00d6s Purse",
+    "Tomato_Bacterial_spot",
+    "Tomato_Early_blight",
+    "Tomato_Late_blight",
+    "Tomato_Leaf_Mold",
+    "Tomato_Septoria_leaf_spot",
+    "Tomato_Spider_mites_Two_spotted_spider_mite",
+    "Tomato__Target_Spot",
+    "Tomato__Tomato_YellowLeaf__Curl_Virus",
+    "Tomato__Tomato_mosaic_virus",
+    "Tomato_healthy"
+  ],
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "training_config": {
+    "epochs": 5,
+    "fine_tune_epochs": 5,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "fine_tune_layers": 50
+  },
+  "final_metrics": {
+    "accuracy": 0.07371556013822556,
+    "auc": 0.5192158818244934,
+    "loss": 3.1053409576416016,
+    "top3_accuracy": 0.21593447029590607
+  },
+  "final_accuracy": 0.07371556013822556,
+  "final_auc": 0.5192158818244934,
+  "final_top3_accuracy": 0.21593447029590607,
+  "best_accuracy": 0.08289898186922073,
+  "best_loss": 3.0948779582977295,
+  "environment": {
+    "environment": "local",
+    "gpu_available": false,
+    "gpu_name": null,
+    "tpu_available": false,
+    "memory_gb": 11.7
+  },
+  "timestamp": "2026-01-09T15:43:41.817859"
+}

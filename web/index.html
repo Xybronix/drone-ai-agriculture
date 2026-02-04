@@ -1,0 +1,3065 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone AI Agriculture - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        .light {
+            --primary: #059669;
+            --primary-dark: #047857;
+            --secondary: #2563eb;
+            --accent: #d97706;
+            --danger: #dc2626;
+            --purple: #7c3aed;
+            --bg-dark: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        code, .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, var(--purple) 0%, #6d28d9 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-purple:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 1rem;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-healthy {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .status-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .status-external {
+            background: rgba(139, 92, 246, 0.2);
+            color: #8b5cf6;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .result-item {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .result-item:nth-child(1) { animation-delay: 0.1s; }
+        .result-item:nth-child(2) { animation-delay: 0.2s; }
+        .result-item:nth-child(3) { animation-delay: 0.3s; }
+        .result-item:nth-child(4) { animation-delay: 0.4s; }
+
+        .webcam-container {
+            position: relative;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .webcam-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.7) 100%);
+            pointer-events: none;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .history-row {
+            transition: all 0.3s ease;
+        }
+
+        .history-row:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader.purple {
+            border-top-color: var(--purple);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            padding: 2rem;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-backdrop.active .modal-content {
+            transform: scale(1);
+        }
+
+        input, select {
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+        
+        .password-container input {
+            padding-right: 40px;
+        }
+
+        /* Backend Selector Styles */
+        .backend-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .backend-option {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 2px solid var(--border);
+            background: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .backend-option:hover {
+            border-color: var(--primary);
+        }
+
+        .backend-option.active {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .backend-option.active.external {
+            border-color: var(--purple);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .backend-option.active.auto {
+            border-color: var(--accent);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .backend-option i {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .backend-option span {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .backend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .backend-badge.local {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .backend-badge.external {
+            background: rgba(139, 92, 246, 0.2);
+            color: #8b5cf6;
+        }
+
+        .backend-badge.auto {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        /* Compare Mode */
+        .compare-results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .compare-column {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: var(--bg-dark);
+        }
+
+        .compare-column.local {
+            border-left: 3px solid var(--primary);
+        }
+
+        .compare-column.external {
+            border-left: 3px solid var(--purple);
+        }
+
+        @media (max-width: 768px) {
+            .upload-zone {
+                padding: 2rem 1rem;
+            }
+            .backend-selector {
+                flex-direction: column;
+            }
+            .compare-results {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="border-b border-gray-700 bg-opacity-80 backdrop-blur-sm sticky top-0 z-50" style="background: var(--bg-card); border-color: var(--border);">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                        <i class="fas fa-leaf text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold gradient-text">Drone AI Agriculture</h1>
+                        <p class="text-xs" style="color: var(--text-secondary);">Surveillance Intelligente</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- Backend Indicator -->
+                    <div id="backendIndicator" class="backend-badge local">
+                        <i class="fas fa-microchip"></i>
+                        <span>Local</span>
+                    </div>
+
+                    <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: var(--bg-dark);">
+                        <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                        <span style="color: var(--text-secondary);">Connexion...</span>
+                    </div>
+
+                    <!-- Auth Status -->
+                    <div id="authStatus" class="flex items-center gap-2">
+                        <button id="btnLogin" onclick="openLoginModal()" class="btn-secondary text-sm py-1 px-3">
+                            <i class="fas fa-sign-in-alt mr-1"></i>Connexion
+                        </button>
+                        <div id="userInfo" class="hidden flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: var(--bg-dark);">
+                            <i class="fas fa-user" style="color: var(--primary);"></i>
+                            <span id="userName" style="color: var(--text-secondary);"></span>
+                            <button onclick="logout()" class="ml-2 text-red-400 hover:text-red-300">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="openSettings()" class="p-2 rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-cog" style="color: var(--text-secondary);"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="max-w-7xl mx-auto px-4 pb-4 flex gap-2 flex-wrap">
+                <button class="nav-tab active" data-tab="analyze" onclick="switchTab('analyze')">
+                    <i class="fas fa-microscope mr-2"></i>Analyser
+                </button>
+                <button class="nav-tab" data-tab="compare" onclick="switchTab('compare')">
+                    <i class="fas fa-balance-scale mr-2"></i>Comparer
+                </button>
+                <button class="nav-tab" data-tab="webcam" onclick="switchTab('webcam')">
+                    <i class="fas fa-video mr-2"></i>Webcam
+                </button>
+                <button class="nav-tab auth-required" data-tab="history" onclick="switchTab('history')">
+                    <i class="fas fa-history mr-2"></i>Historique
+                </button>
+                <button class="nav-tab auth-required" data-tab="dashboard" onclick="switchTab('dashboard')">
+                    <i class="fas fa-chart-line mr-2"></i>Dashboard
+                </button>
+                <button class="nav-tab auth-required" data-tab="profile" onclick="switchTab('profile')">
+                    <i class="fas fa-user-cog mr-2"></i>Profil
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Analyze Tab -->
+            <div id="tab-analyze" class="tab-content">
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Upload Section -->
+                    <div class="card p-6">
+                        <h2 class="text-xl font-semibold mb-4">
+                            <i class="fas fa-upload mr-2" style="color: var(--primary);"></i>
+                            Analyser une Image
+                        </h2>
+
+                        <!-- Backend Selector -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
+                                Méthode d'analyse
+                            </label>
+                            <div class="backend-selector">
+                                <div class="backend-option active" data-backend="local" onclick="selectBackend('local')">
+                                    <i class="fas fa-microchip" style="color: var(--primary);"></i>
+                                    <span>Modèle Local</span>
+                                    <p class="text-xs mt-1" style="color: var(--text-secondary);">TensorFlow/ONNX</p>
+                                </div>
+                                <div class="backend-option" data-backend="external" onclick="selectBackend('external')">
+                                    <i class="fas fa-cloud" style="color: var(--purple);"></i>
+                                    <span>Plant.id</span>
+                                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Service externe</p>
+                                </div>
+                                <div class="backend-option" data-backend="auto" onclick="selectBackend('auto')">
+                                    <i class="fas fa-magic" style="color: var(--accent);"></i>
+                                    <span>Auto</span>
+                                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Fallback</p>
+                                </div>
+                            </div>
+                            <div id="geolocationSection" class="mb-4 hidden">
+                                <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
+                                    <i class="fas fa-map-marker-alt mr-2" style="color: var(--accent);"></i>
+                                    Géolocalisation (Plant.id uniquement)
+                                    <span id="geolocationStatus" class="text-xs ml-2" style="color: var(--text-secondary);">
+                                        <i class="fas fa-circle text-yellow-500"></i> Inactive
+                                    </span>
+                                </label>
+                                
+                                <div class="flex gap-2 mb-3">
+                                    <button type="button" onclick="getCurrentLocation()" id="btnGetLocation" class="btn-secondary flex-1">
+                                        <i class="fas fa-location-crosshairs mr-2"></i>
+                                        Utiliser ma position
+                                    </button>
+                                    <button type="button" onclick="clearLocation()" id="btnClearLocation" class="btn-secondary" disabled>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                
+                                <div id="locationInputs" class="hidden space-y-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="text-xs block mb-1" style="color: var(--text-secondary);">Latitude</label>
+                                            <input type="number" id="inputLatitude" step="any" placeholder="ex: 48.8566" 
+                                                class="w-full p-2 text-sm rounded" style="background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-primary);">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs block mb-1" style="color: var(--text-secondary);">Longitude</label>
+                                            <input type="number" id="inputLongitude" step="any" placeholder="ex: 2.3522"
+                                                class="w-full p-2 text-sm rounded" style="background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-primary);">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs" style="color: var(--text-secondary);">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        La géolocalisation améliore la précision de l'identification des plantes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="uploadZone" class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                            <i class="fas fa-cloud-upload-alt text-5xl mb-4" style="color: var(--primary);"></i>
+                            <p class="text-lg font-medium mb-2">Glissez une image ici</p>
+                            <p style="color: var(--text-secondary);">ou cliquez pour sélectionner</p>
+                            <p class="text-xs mt-2" style="color: var(--text-secondary);">JPG, PNG • Max 10 MB</p>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreview" class="hidden mt-4">
+                            <img id="previewImg" src="" alt="Preview" class="w-full rounded-lg max-h-64 object-contain bg-gray-900">
+                            <div class="flex gap-2 mt-4">
+                                <button id="btnAnalyze" onclick="analyzeImage()" class="btn-primary flex-1">
+                                    <i class="fas fa-search mr-2"></i>Analyser
+                                </button>
+                                <button onclick="clearImage()" class="btn-secondary">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="card p-6">
+                        <h2 class="text-xl font-semibold mb-4">
+                            <i class="fas fa-clipboard-check mr-2" style="color: var(--secondary);"></i>
+                            Résultats d'Analyse
+                            <span id="resultBackendBadge" class="backend-badge local ml-2 hidden">
+                                <i class="fas fa-microchip"></i>
+                                <span>Local</span>
+                            </span>
+                        </h2>
+
+                        <!-- Loading State -->
+                        <div id="analysisLoading" class="hidden flex flex-col items-center justify-center py-12">
+                            <div id="analysisLoader" class="loader mb-4"></div>
+                            <p id="analysisLoadingText" style="color: var(--text-secondary);">Analyse en cours...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="analysisEmpty" class="text-center py-12">
+                            <i class="fas fa-seedling text-5xl mb-4" style="color: var(--border);"></i>
+                            <p style="color: var(--text-secondary);">Uploadez une image pour commencer l'analyse</p>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="analysisResults" class="hidden space-y-4">
+                            <!-- Plant Detection -->
+                            <div class="result-item p-4 rounded-lg" style="background: var(--bg-dark);">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-medium"><i class="fas fa-check-circle mr-2" style="color: var(--primary);"></i>Détection Plante</span>
+                                    <span id="resultPlantDetection" class="status-badge status-healthy">-</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="resultPlantConfidence" class="h-2 rounded-full transition-all" style="width: 0%; background: var(--primary);"></div>
+                                </div>
+                                <p id="resultPlantConfidenceText" class="text-xs mt-1" style="color: var(--text-secondary);">Confiance: -</p>
+                            </div>
+
+                            <!-- Species -->
+                            <div class="result-item p-4 rounded-lg" style="background: var(--bg-dark);">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-medium"><i class="fas fa-leaf mr-2" style="color: var(--secondary);"></i>Espèce</span>
+                                    <span id="resultSpecies" class="mono text-sm" style="color: var(--primary);">-</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="resultSpeciesConfidence" class="h-2 rounded-full transition-all" style="width: 0%; background: var(--secondary);"></div>
+                                </div>
+                                <div id="resultSpeciesScientific" class="text-xs mt-1 hidden" style="color: var(--text-secondary);"></div>
+                            </div>
+
+                            <!-- Growth Stage -->
+                            <div class="result-item p-4 rounded-lg" style="background: var(--bg-dark);">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-medium"><i class="fas fa-chart-line mr-2" style="color: var(--accent);"></i>Stade de Croissance</span>
+                                    <span id="resultGrowthStage" class="mono text-sm" style="color: var(--accent);">-</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="resultGrowthConfidence" class="h-2 rounded-full transition-all" style="width: 0%; background: var(--accent);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Health -->
+                            <div class="result-item p-4 rounded-lg" style="background: var(--bg-dark);">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-medium"><i class="fas fa-heart-pulse mr-2" style="color: var(--danger);"></i>État de Santé</span>
+                                    <span id="resultHealth" class="status-badge">-</span>
+                                </div>
+                                <p id="resultHealthDetails" class="text-sm mt-2" style="color: var(--text-secondary);"></p>
+                                <!-- External AI Disease Details -->
+                                <div id="resultDiseaseDetails" class="hidden mt-3 p-3 rounded-lg" style="background: var(--bg-card);">
+                                    <h4 class="text-sm font-semibold mb-2"><i class="fas fa-virus mr-1"></i> Détails Maladie</h4>
+                                    <div id="resultDiseaseList" class="space-y-2"></div>
+                                </div>
+                            </div>
+
+                            <!-- Inference Time -->
+                            <div class="result-item p-3 rounded-lg flex items-center justify-between" style="background: var(--bg-dark);">
+                                <span class="text-sm" style="color: var(--text-secondary);">
+                                    <i class="fas fa-clock mr-2"></i>Temps d'inférence
+                                </span>
+                                <span id="resultInferenceTime" class="mono text-sm">-</span>
+                            </div>
+
+                            <!-- Recommendations -->
+                            <div class="result-item p-4 rounded-lg border-2" style="background: var(--bg-dark); border-color: var(--primary);">
+                                <h3 class="font-semibold mb-3"><i class="fas fa-lightbulb mr-2" style="color: var(--accent);"></i>Recommandations</h3>
+                                <div id="resultRecommendations" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compare Tab -->
+            <div id="tab-compare" class="tab-content hidden">
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-balance-scale mr-2" style="color: var(--accent);"></i>
+                        Comparer les Méthodes d'Analyse
+                    </h2>
+                    <p class="mb-6" style="color: var(--text-secondary);">
+                        Analysez une image avec les deux méthodes (locale et externe) pour comparer les résultats.
+                    </p>
+
+                    <div id="compareUploadZone" class="upload-zone mb-6" onclick="document.getElementById('compareFileInput').click()">
+                        <input type="file" id="compareFileInput" accept="image/*" class="hidden" onchange="handleCompareFileSelect(event)">
+                        <i class="fas fa-images text-5xl mb-4" style="color: var(--accent);"></i>
+                        <p class="text-lg font-medium mb-2">Sélectionnez une image à comparer</p>
+                        <p style="color: var(--text-secondary);">Les deux méthodes seront utilisées</p>
+                    </div>
+
+                    <!-- Compare Image Preview -->
+                    <div id="compareImagePreview" class="hidden mb-6">
+                        <img id="comparePreviewImg" src="" alt="Preview" class="w-full rounded-lg max-h-48 object-contain bg-gray-900 mb-4">
+                        <div class="flex gap-2">
+                            <button onclick="runComparison()" class="btn-primary flex-1">
+                                <i class="fas fa-play mr-2"></i>Lancer la comparaison
+                            </button>
+                            <button onclick="clearCompare()" class="btn-secondary">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Compare Loading -->
+                    <div id="compareLoading" class="hidden text-center py-8">
+                        <div class="flex justify-center gap-8">
+                            <div class="text-center">
+                                <div class="loader mb-2 mx-auto"></div>
+                                <p class="text-sm" style="color: var(--text-secondary);">Local</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="loader purple mb-2 mx-auto"></div>
+                                <p class="text-sm" style="color: var(--text-secondary);">Plant.id</p>
+                            </div>
+                        </div>
+                        <p class="mt-4" style="color: var(--text-secondary);">Analyse en cours...</p>
+                    </div>
+
+                    <!-- Compare Results -->
+                    <div id="compareResults" class="hidden">
+                        <div class="compare-results">
+                            <!-- Local Results -->
+                            <div class="compare-column local">
+                                <h3 class="font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-microchip mr-2" style="color: var(--primary);"></i>
+                                    Modèle Local
+                                    <span id="compareLocalTime" class="ml-auto text-xs mono" style="color: var(--text-secondary);"></span>
+                                </h3>
+                                <div id="compareLocalResults" class="space-y-2"></div>
+                            </div>
+                            <!-- External Results -->
+                            <div class="compare-column external">
+                                <h3 class="font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-cloud mr-2" style="color: var(--purple);"></i>
+                                    Plant.id
+                                    <span id="compareExternalTime" class="ml-auto text-xs mono" style="color: var(--text-secondary);"></span>
+                                </h3>
+                                <div id="compareExternalResults" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Webcam Tab -->
+            <div id="tab-webcam" class="tab-content hidden">
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-video mr-2" style="color: var(--primary);"></i>
+                        Analyse en Temps Réel
+                    </h2>
+
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        <div class="webcam-container bg-gray-900 rounded-xl aspect-video flex items-center justify-center">
+                            <video id="webcamVideo" class="w-full h-full object-cover rounded-xl hidden" autoplay playsinline></video>
+                            <div id="webcamPlaceholder" class="text-center">
+                                <i class="fas fa-video-slash text-5xl mb-4" style="color: var(--border);"></i>
+                                <p style="color: var(--text-secondary);">Webcam non active</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex gap-2 mb-4">
+                                <button id="btnStartWebcam" onclick="startWebcam()" class="btn-primary flex-1">
+                                    <i class="fas fa-play mr-2"></i>Démarrer
+                                </button>
+                                <button id="btnStopWebcam" onclick="stopWebcam()" class="btn-secondary flex-1 hidden">
+                                    <i class="fas fa-stop mr-2"></i>Arrêter
+                                </button>
+                                <button id="btnCapture" onclick="captureWebcam()" class="btn-secondary hidden">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+
+                            <div id="webcamResults" class="space-y-3">
+                                <p class="text-center py-8" style="color: var(--text-secondary);">
+                                    Démarrez la webcam pour l'analyse en temps réel
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="tab-history" class="tab-content hidden">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-semibold">
+                            <i class="fas fa-history mr-2" style="color: var(--primary);"></i>
+                            Historique des Analyses
+                        </h2>
+                        <button onclick="refreshHistory()" class="btn-secondary">
+                            <i class="fas fa-sync-alt mr-2"></i>Actualiser
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b" style="border-color: var(--border);">
+                                    <th class="text-left py-3 px-4">Date</th>
+                                    <th class="text-left py-3 px-4">Espèce</th>
+                                    <th class="text-left py-3 px-4">Stade</th>
+                                    <th class="text-left py-3 px-4">Santé</th>
+                                    <th class="text-left py-3 px-4">Backend</th>
+                                    <th class="text-left py-3 px-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-8" style="color: var(--text-secondary);">
+                                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                                        <p>Aucune analyse dans l'historique</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content hidden">
+                <!-- Filters Section -->
+                <div class="card p-4 mb-6">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--text-secondary);">Période</label>
+                            <select id="dashboardPeriod" onchange="refreshDashboard()" class="text-sm py-2">
+                                <option value="all">Toutes les données</option>
+                                <option value="7">7 derniers jours</option>
+                                <option value="30" selected>30 derniers jours</option>
+                                <option value="90">3 derniers mois</option>
+                                <option value="365">Cette année</option>
+                                <option value="custom">Personnalisé</option>
+                            </select>
+                        </div>
+                        
+                        <div id="customDateRange" class="hidden flex gap-2">
+                            <div>
+                                <label class="block text-xs mb-1" style="color: var(--text-secondary);">Du</label>
+                                <input type="date" id="dashboardStartDate" onchange="refreshDashboard()" class="text-sm py-2">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1" style="color: var(--text-secondary);">Au</label>
+                                <input type="date" id="dashboardEndDate" onchange="refreshDashboard()" class="text-sm py-2">
+                            </div>
+                        </div>
+                        
+                        <!-- Admin Only: User Filter -->
+                        <div id="adminUserFilter" class="hidden">
+                            <label class="block text-xs mb-1" style="color: var(--text-secondary);">Vue</label>
+                            <select id="dashboardUserScope" onchange="refreshDashboard()" class="text-sm py-2">
+                                <option value="me">Mes données</option>
+                                <option value="all">Tous les utilisateurs</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="refreshDashboard()" class="btn-secondary ml-auto">
+                            <i class="fas fa-sync-alt mr-2"></i>Actualiser
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid md:grid-cols-4 gap-4 mb-8">
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-images text-3xl mb-2" style="color: var(--primary);"></i>
+                        <p class="text-3xl font-bold" id="statTotalAnalyses">0</p>
+                        <p style="color: var(--text-secondary);">Analyses totales</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-seedling text-3xl mb-2" style="color: var(--secondary);"></i>
+                        <p class="text-3xl font-bold" id="statPlantsDetected">0</p>
+                        <p style="color: var(--text-secondary);">Plantes détectées</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-heart text-3xl mb-2" style="color: var(--primary);"></i>
+                        <p class="text-3xl font-bold" id="statHealthy">0%</p>
+                        <p style="color: var(--text-secondary);">Plantes saines</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-clock text-3xl mb-2" style="color: var(--accent);"></i>
+                        <p class="text-3xl font-bold" id="statAvgTime">0ms</p>
+                        <p style="color: var(--text-secondary);">Temps moyen</p>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Species Distribution -->
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">
+                            <i class="fas fa-leaf mr-2" style="color: var(--primary);"></i>
+                            Distribution des Espèces
+                        </h3>
+                        <div id="speciesChart" class="space-y-3">
+                            <p class="text-center py-8" style="color: var(--text-secondary);">Chargement...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Health Distribution -->
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">
+                            <i class="fas fa-heartbeat mr-2" style="color: var(--danger);"></i>
+                            État de Santé
+                        </h3>
+                        <div id="healthChart" class="space-y-3">
+                            <p class="text-center py-8" style="color: var(--text-secondary);">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Analysis Chart -->
+                <div class="card p-6 mb-8">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-chart-area mr-2" style="color: var(--secondary);"></i>
+                        Analyses par Jour
+                    </h3>
+                    <div id="dailyChart" class="h-48">
+                        <p class="text-center py-8" style="color: var(--text-secondary);">Chargement...</p>
+                    </div>
+                </div>
+
+                <!-- Admin Section: Top Users -->
+                <div id="adminStatsSection" class="hidden">
+                    <div class="card p-6 mb-8">
+                        <h3 class="text-lg font-semibold mb-4">
+                            <i class="fas fa-users mr-2" style="color: var(--purple);"></i>
+                            Statistiques Globales (Admin)
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-4 mb-6">
+                            <div class="p-4 rounded-lg text-center" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--purple);" id="adminStatUsers">0</p>
+                                <p class="text-sm" style="color: var(--text-secondary);">Utilisateurs</p>
+                            </div>
+                            <div class="p-4 rounded-lg text-center" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--primary);" id="adminStatTotalAnalyses">0</p>
+                                <p class="text-sm" style="color: var(--text-secondary);">Analyses totales</p>
+                            </div>
+                            <div class="p-4 rounded-lg text-center" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--accent);" id="adminStatToday">0</p>
+                                <p class="text-sm" style="color: var(--text-secondary);">Aujourd'hui</p>
+                            </div>
+                        </div>
+
+                        <!-- Top Users Table -->
+                        <h4 class="font-medium mb-3">Top Utilisateurs</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b" style="border-color: var(--border);">
+                                        <th class="text-left py-2">#</th>
+                                        <th class="text-left py-2">Utilisateur</th>
+                                        <th class="text-left py-2">Analyses</th>
+                                        <th class="text-left py-2">Plantes saines</th>
+                                        <th class="text-left py-2">Dernière activité</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topUsersTable">
+                                    <tr><td colspan="5" class="text-center py-4" style="color: var(--text-secondary);">Chargement...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="tab-profile" class="tab-content hidden">
+                <div class="max-w-2xl mx-auto">
+                    <div class="card p-6 mb-6">
+                        <h2 class="text-xl font-semibold mb-6">
+                            <i class="fas fa-user-circle mr-2" style="color: var(--primary);"></i>
+                            Mon Profil
+                        </h2>
+
+                        <!-- User Info Display -->
+                        <div class="p-4 rounded-lg mb-6" style="background: var(--bg-dark);">
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold" 
+                                     style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);">
+                                    <span id="profileInitial">?</span>
+                                </div>
+                                <div>
+                                    <p class="text-xl font-semibold" id="profileUsername">-</p>
+                                    <p class="text-sm" style="color: var(--text-secondary);" id="profileEmail">-</p>
+                                    <!--<p class="text-xs mt-1" style="color: var(--text-secondary);">
+                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                        Membre depuis: <span id="profileCreatedAt1">-</span>
+                                    </p>-->
+                                </div>
+                                <div class="ml-auto">
+                                    <span id="profileBadge" class="status-badge status-healthy hidden">Admin</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Change Username -->
+                        <div class="mb-6">
+                            <h3 class="font-semibold mb-3">
+                                <i class="fas fa-user-edit mr-2" style="color: var(--secondary);"></i>
+                                Modifier le nom d'utilisateur
+                            </h3>
+                            <form id="changeUsernameForm" onsubmit="handleChangeUsername(event)">
+                                <div class="flex gap-2">
+                                    <input type="text" id="newUsername" required minlength="3" 
+                                           placeholder="Nouveau nom d'utilisateur" class="flex-1">
+                                    <button type="submit" class="btn-secondary">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                </div>
+                                <div id="usernameError" class="hidden mt-2 text-sm" style="color: var(--danger);"></div>
+                                <div id="usernameSuccess" class="hidden mt-2 text-sm" style="color: var(--primary);"></div>
+                            </form>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="mb-6">
+                            <h3 class="font-semibold mb-3">
+                                <i class="fas fa-key mr-2" style="color: var(--accent);"></i>
+                                Modifier le mot de passe
+                            </h3>
+                            <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                                <div class="space-y-3">
+                                    <div class="relative">
+                                        <input type="password" id="currentPassword" required 
+                                               placeholder="Mot de passe actuel" class="pr-10">
+                                        <button type="button" onclick="togglePasswordVisibility('currentPassword', this)" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                                style="background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="password" id="newPassword" required minlength="8" 
+                                               placeholder="Nouveau mot de passe (min. 8 caractères)" class="pr-10">
+                                        <button type="button" onclick="togglePasswordVisibility('newPassword', this)" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                                style="background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="password" id="confirmPassword" required minlength="8" 
+                                               placeholder="Confirmer le nouveau mot de passe" class="pr-10">
+                                        <button type="button" onclick="togglePasswordVisibility('confirmPassword', this)" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                                style="background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <button type="submit" class="btn-primary w-full">
+                                        <i class="fas fa-lock mr-2"></i>Changer le mot de passe
+                                    </button>
+                                </div>
+                                <div id="passwordError" class="hidden mt-2 text-sm" style="color: var(--danger);"></div>
+                                <div id="passwordSuccess" class="hidden mt-2 text-sm" style="color: var(--primary);"></div>
+                            </form>
+                        </div>
+
+                        <!-- Logout -->
+                        <div class="pt-4 border-t" style="border-color: var(--border);">
+                            <button onclick="logout()" class="btn-secondary w-full" style="border-color: var(--danger); color: var(--danger);">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                            </button>
+                        </div>
+                    </div>
+                        
+                    <hr style="border-color: var(--border);" class="my-6">
+                    
+                    <!-- Account Info -->
+                    <div class="mb-6">
+                        <h3 class="font-medium mb-3">
+                            <i class="fas fa-info-circle mr-2" style="color: var(--text-secondary);"></i>
+                            Informations du compte
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p style="color: var(--text-secondary);">Membre depuis</p>
+                                <p id="profileCreatedAt" class="font-medium">-</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary);">Dernière connexion</p>
+                                <p id="profileLastLogin" class="font-medium">-</p>
+                            </div>
+                        </div>
+                    </div>
+                        
+                    <hr style="border-color: var(--border);" class="my-6">
+
+                    <!-- Account Stats -->
+                    <div class="card p-6">
+                        <h3 class="font-semibold mb-4">
+                            <i class="fas fa-chart-pie mr-2" style="color: var(--purple);"></i>
+                            Mes Statistiques
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center p-3 rounded-lg" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--primary);" id="profileStatAnalyses">0</p>
+                                <p class="text-xs" style="color: var(--text-secondary);">Analyses</p>
+                            </div>
+                            <div class="text-center p-3 rounded-lg" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--secondary);" id="profileStatPlants">0</p>
+                                <p class="text-xs" style="color: var(--text-secondary);">Plantes</p>
+                            </div>
+                            <div class="text-center p-3 rounded-lg" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--primary);" id="profileStatHealthy">0%</p>
+                                <p class="text-xs" style="color: var(--text-secondary);">Saines</p>
+                            </div>
+                            <div class="text-center p-3 rounded-lg" style="background: var(--bg-dark);">
+                                <p class="text-2xl font-bold" style="color: var(--accent);" id="profileStatLastAnalysis">-</p>
+                                <p class="text-xs" style="color: var(--text-secondary);">Dernière</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal-backdrop">
+            <div class="modal-content">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold">Paramètres</h3>
+                    <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">URL de l'API</label>
+                        <input type="url" id="apiUrlInput" placeholder="http://localhost:8000">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Clé API (optionnel)</label>
+                        <input type="text" id="apiKeyInput" placeholder="Votre clé API">
+                    </div>
+
+                    <hr style="border-color: var(--border);">
+
+                    <h4 class="font-semibold flex items-center gap-2">
+                        <i class="fas fa-robot" style="color: var(--purple);"></i>
+                        Configuration IA
+                    </h4>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Backend par défaut</label>
+                        <select id="defaultBackendSelect">
+                            <option value="local">Modèle Local (TensorFlow/ONNX)</option>
+                            <option value="external">Service Externe (Plant.id)</option>
+                            <option value="auto">Auto (Local avec fallback)</option>
+                        </select>
+                    </div>
+
+                    <div class="p-4 rounded-lg" style="background: var(--bg-dark);">
+                        <h5 class="font-medium mb-2 flex items-center gap-2">
+                            <i class="fas fa-cloud" style="color: var(--purple);"></i>
+                            Plant.id API
+                        </h5>
+                        <p class="text-sm mb-3" style="color: var(--text-secondary);">
+                            Service gratuit: 100-200 requêtes/jour sans engagement.
+                            <a href="https://plant.id/" target="_blank" class="underline" style="color: var(--purple);">
+                                Obtenir une clé gratuite →
+                            </a>
+                        </p>
+                        <div id="plantIdStatus" class="text-sm flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            <span style="color: var(--text-secondary);">Vérification...</span>
+                        </div>
+                    </div>
+
+                    <button onclick="saveSettings()" class="btn-primary w-full mt-6">
+                        <i class="fas fa-save mr-2"></i>Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for large images -->
+        <div id="imageModal" class="modal-backdrop">
+            <div class="modal-content max-w-4xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="modalImageTitle" class="text-xl font-semibold"></h3>
+                    <button onclick="closeImageModal()" class="p-2 rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <img id="modalImage" src="" alt="Image" class="w-full h-auto rounded-lg mb-4">
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="font-medium">Informations</p>
+                        <p id="modalImageSimilarity" style="color: var(--text-secondary);"></p>
+                        <p id="modalImageLicense" style="color: var(--text-secondary);"></p>
+                    </div>
+                    <div>
+                        <p class="font-medium">Actions</p>
+                        <button onclick="downloadModalImage()" class="btn-secondary mt-2 w-full">
+                            <i class="fas fa-download mr-2"></i>Télécharger
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Modal -->
+        <div id="loginModal" class="modal-backdrop">
+            <div class="modal-content">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold"><i class="fas fa-sign-in-alt mr-2" style="color: var(--primary);"></i>Connexion</h3>
+                    <button onclick="closeLoginModal()" class="p-2 rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nom d'utilisateur</label>
+                            <input type="text" id="loginUsername" required placeholder="Votre nom d'utilisateur">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Mot de passe</label>
+                            <div class="relative">
+                                <input type="password" id="loginPassword" required placeholder="Votre mot de passe" class="pr-10">
+                                <button type="button" onclick="togglePasswordVisibility('loginPassword', this)" 
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                        style="background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="loginError" class="hidden p-3 rounded-lg text-sm" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                        </div>
+                        
+                        <button type="submit" class="btn-primary w-full">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Se connecter
+                        </button>
+                        
+                        <div class="text-center text-sm" style="color: var(--text-secondary);">
+                            <p>Mode invité : vous pouvez analyser des images sans vous connecter.</p>
+                            <p class="mt-1">L'historique n'est accessible qu'aux utilisateurs connectés.</p>
+                        </div>
+                        
+                        <hr style="border-color: var(--border);">
+                        
+                        <button type="button" onclick="openRegisterModal()" class="btn-secondary w-full">
+                            <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Register Modal -->
+        <div id="registerModal" class="modal-backdrop">
+            <div class="modal-content">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold"><i class="fas fa-user-plus mr-2" style="color: var(--primary);"></i>Inscription</h3>
+                    <button onclick="closeRegisterModal()" class="p-2 rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nom d'utilisateur</label>
+                            <input type="text" id="registerUsername" required minlength="3" placeholder="Choisissez un nom d'utilisateur">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Email (optionnel)</label>
+                            <input type="email" id="registerEmail" placeholder="votre@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Mot de passe</label>
+                            <div class="relative">
+                                <input type="password" id="registerPassword" required minlength="8" placeholder="Minimum 8 caractères" class="pr-10">
+                                <button type="button" onclick="togglePasswordVisibility('registerPassword', this)" 
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                        style="background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="registerError" class="hidden p-3 rounded-lg text-sm" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                        </div>
+                        
+                        <div id="registerSuccess" class="hidden p-3 rounded-lg text-sm" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">
+                        </div>
+                        
+                        <button type="submit" class="btn-primary w-full">
+                            <i class="fas fa-user-plus mr-2"></i>S'inscrire
+                        </button>
+                        
+                        <button type="button" onclick="closeRegisterModal(); openLoginModal();" class="btn-secondary w-full">
+                            <i class="fas fa-arrow-left mr-2"></i>Retour à la connexion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration (stored in memory - no localStorage in iframe)
+        let config = {
+            apiUrl: window.location.origin,
+            apiKey: '',
+            defaultBackend: 'local'
+        };
+
+        let currentUser = null;
+        let authToken = null;
+        let useGeolocation = false;
+        let currentLatitude = null;
+        let currentLongitude = null;
+        let currentFile = null;
+        let currentModalImage = null;
+        let compareFile = null;
+        let webcamStream = null;
+        let selectedBackend = 'local';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Dark mode detection
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.documentElement.classList.add('light');
+            }
+            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', event => {
+                document.documentElement.classList.toggle('light', event.matches);
+            });
+
+            // Setup drag and drop
+            setupDragAndDrop();
+
+            // Check API connection
+            checkConnection();
+
+            // Load settings
+            document.getElementById('apiUrlInput').value = config.apiUrl;
+            document.getElementById('apiKeyInput').value = config.apiKey;
+            document.getElementById('defaultBackendSelect').value = config.defaultBackend;
+
+            // Set initial backend
+            selectBackend(config.defaultBackend);
+
+            // Update auth UI
+            updateAuthUI();
+
+            // Set user
+            loadStoredUser();
+        });
+
+        // Token Functions
+        function saveTokenWithExpiration(token) {
+            const expiresAt = new Date();
+            expiresAt.setHours(expiresAt.getHours() + 24);
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('authTokenExpiresAt', expiresAt.toISOString());
+        }
+
+        function getValidToken() {
+            const token = localStorage.getItem('authToken');
+            const expiresAt = localStorage.getItem('authTokenExpiresAt');
+            
+            if (!token || !expiresAt) {
+                return null;
+            }
+            
+            const now = new Date();
+            const expirationDate = new Date(expiresAt);
+            
+            if (now > expirationDate) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('authTokenExpiresAt');
+                localStorage.removeItem('currentUser');
+                return null;
+            }
+            
+            return token;
+        }
+
+
+        // Auth functions
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginForm').reset();
+        }
+
+        function openRegisterModal() {
+            closeLoginModal();
+            document.getElementById('registerModal').classList.add('active');
+            document.getElementById('registerError').classList.add('hidden');
+            document.getElementById('registerSuccess').classList.add('hidden');
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').classList.remove('active');
+            document.getElementById('registerForm').reset();
+        }
+
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function loadStoredUser() {
+            const token = getValidToken();
+            
+            if (token) {
+                authToken = token;
+                config.apiKey = token;
+                
+                try {
+                    await fetchCurrentUser();
+                    updateAuthUI();
+                    
+                    const activeTab = document.querySelector('.nav-tab.active');
+                    if (activeTab) {
+                        const tabName = activeTab.dataset.tab;
+                        if (tabName === 'dashboard') {
+                            refreshDashboard();
+                        } else if (tabName === 'profile') {
+                            loadProfileData();
+                        }
+                    }
+                    
+                    showNotification('Session restaurée', 'success');
+                } catch (error) {
+                    console.error('Failed to restore session:', error);
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('authTokenExpiresAt');
+                    localStorage.removeItem('currentUser');
+                    authToken = null;
+                    config.apiKey = '';
+                    currentUser = null;
+                    updateAuthUI();
+                }
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Identifiants incorrects');
+                }
+                
+                const data = await response.json();
+                authToken = data.access_token;
+                config.apiKey = authToken;
+
+                // Save the token
+                saveTokenWithExpiration(authToken);
+                
+                // Get user info
+                await fetchCurrentUser();
+
+                // Save user info
+                if (currentUser) {
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        username: currentUser.username,
+                        email: currentUser.email,
+                        is_admin: currentUser.is_admin,
+                        is_super_admin: currentUser.is_super_admin,
+                        created_at: currentUser.created_at,
+                        last_login: currentUser.last_login
+                    }));
+                }
+                
+                closeLoginModal();
+                updateAuthUI();
+                showNotification('Connexion réussie!', 'success');
+
+                // Refresh dashboard/profil if active
+                const activeTab = document.querySelector('.nav-tab.active');
+                if (activeTab) {
+                    const tabName = activeTab.dataset.tab;
+                    if (tabName === 'dashboard') {
+                        refreshDashboard();
+                    } else if (tabName === 'profile') {
+                        loadProfileData();
+                    }
+                }
+                
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorEl = document.getElementById('registerError');
+            const successEl = document.getElementById('registerSuccess');
+            
+            try {
+                const params = new URLSearchParams({ username, password });
+                if (email) params.append('email', email);
+                
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/register?${params}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur lors de l\'inscription');
+                }
+                
+                successEl.textContent = 'Compte créé avec succès! Vous pouvez maintenant vous connecter.';
+                successEl.classList.remove('hidden');
+                errorEl.classList.add('hidden');
+                
+                setTimeout(() => {
+                    closeRegisterModal();
+                    openLoginModal();
+                }, 2000);
+                
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+                successEl.classList.add('hidden');
+            }
+        }
+
+        async function fetchCurrentUser() {
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    currentUser = await response.json();
+
+                    // Save user infos
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        username: currentUser.username,
+                        email: currentUser.email,
+                        is_admin: currentUser.is_admin,
+                        is_super_admin: currentUser.is_super_admin,
+                        created_at: currentUser.created_at,
+                        last_login: currentUser.last_login
+                    }));
+                    
+                    return currentUser;
+                } else {
+                    // Invalid Token
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('authTokenExpiresAt');
+                    localStorage.removeItem('currentUser');
+                    throw new Error('Session invalide');
+                }
+            } catch (error) {
+                console.error('Failed to fetch user info:', error);
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            config.apiKey = '';
+            currentUser = null;
+
+            // Clean localStorage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authTokenExpiresAt');
+            localStorage.removeItem('currentUser');
+
+            updateAuthUI();
+            showNotification('Déconnexion réussie', 'info');
+
+            if (document.getElementById('tab-dashboard').classList.contains('hidden') === false) {
+                refreshDashboard();
+            }
+
+            if (document.getElementById('tab-profile').classList.contains('hidden') === false) {
+                // Reinitialize profile
+                document.getElementById('profileUsername').textContent = '-';
+                document.getElementById('profileEmail').textContent = '-';
+                document.getElementById('profileInitial').textContent = '?';
+                document.getElementById('profileStatAnalyses').textContent = '0';
+                document.getElementById('profileStatPlants').textContent = '0';
+                document.getElementById('profileStatHealthy').textContent = '0%';
+                document.getElementById('profileStatLastAnalysis').textContent = '-';
+                document.getElementById('profileBadge').classList.add('hidden');
+                document.getElementById('profileCreatedAt').textContent = '-';
+                document.getElementById('profileLastLogin').textContent = '-';
+            }
+            
+            // Switch to analyze tab if on restricted tab
+            const activeTab = document.querySelector('.nav-tab.active');
+            if (activeTab && activeTab.classList.contains('auth-required')) {
+                switchTab('analyze');
+            }
+        }
+
+        function updateAuthUI() {
+            const btnLogin = document.getElementById('btnLogin');
+            const userInfo = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            const authRequiredTabs = document.querySelectorAll('.nav-tab.auth-required');
+            
+            if (currentUser) {
+                btnLogin.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                userName.innerHTML = currentUser.username;
+                
+                // Show admin badge if super admin
+                if (currentUser.is_super_admin) {
+                    userName.innerHTML = `${currentUser.username} <span class="status-badge status-external ml-1">Admin</span>`;
+                }
+                
+                // Enable auth-required tabs
+                authRequiredTabs.forEach(tab => {
+                    tab.style.opacity = '1';
+                    tab.style.pointerEvents = 'auto';
+                });
+            } else {
+                btnLogin.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                userName.textContent = '';
+                
+                // Disable auth-required tabs (visual only, still clickable but will show message)
+                authRequiredTabs.forEach(tab => {
+                    tab.style.opacity = '0.5';
+                });
+            }
+        }
+
+        // Override switchTab to check auth
+        const originalSwitchTab = switchTab;
+        switchTab = function(tabName) {
+            const tab = document.querySelector(`[data-tab="${tabName}"]`);
+            
+            if (tab && tab.classList.contains('auth-required') && !currentUser) {
+                showNotification('Connectez-vous pour accéder à cette section', 'info');
+                openLoginModal();
+                return;
+            }
+            
+            originalSwitchTab(tabName);
+
+            // Refresh data when switching
+            if (tabName === 'profile' && currentUser) {
+                loadProfileData();
+            } else if (tabName === 'dashboard' && currentUser) {
+                refreshDashboard();
+            } else if (tabName === 'history' && currentUser) {
+                refreshHistory();
+            }
+        };
+
+        // Close modals on backdrop click
+        document.getElementById('loginModal').addEventListener('click', e => {
+            if (e.target.id === 'loginModal') closeLoginModal();
+        });
+        document.getElementById('registerModal').addEventListener('click', e => {
+            if (e.target.id === 'registerModal') closeRegisterModal();
+        });
+
+        // Backend selection
+        function selectBackend(backend) {
+            selectedBackend = backend;
+
+            // Update UI
+            document.querySelectorAll('.backend-option').forEach(opt => {
+                opt.classList.remove('active', 'external', 'auto');
+                if (opt.dataset.backend === backend) {
+                    opt.classList.add('active');
+                    if (backend === 'external') opt.classList.add('external');
+                    if (backend === 'auto') opt.classList.add('auto');
+                }
+            });
+
+            // Update header indicator
+            const indicator = document.getElementById('backendIndicator');
+            indicator.className = `backend-badge ${backend}`;
+
+            const icons = { local: 'fa-microchip', external: 'fa-cloud', auto: 'fa-magic' };
+            const labels = { local: 'Local', external: 'Plant.id', auto: 'Auto' };
+
+            indicator.innerHTML = `<i class="fas ${icons[backend]}"></i><span>${labels[backend]}</span>`;
+
+            // Update analyze button style
+            const btnAnalyze = document.getElementById('btnAnalyze');
+            if (btnAnalyze) {
+                if (backend === 'external') {
+                    btnAnalyze.className = 'btn-purple flex-1';
+                } else {
+                    btnAnalyze.className = 'btn-primary flex-1';
+                }
+            }
+
+            // Display/hide geolocation section
+            const geolocationSection = document.getElementById('geolocationSection');
+            if (backend === 'external') {
+                geolocationSection.classList.remove('hidden');
+            } else {
+                geolocationSection.classList.add('hidden');
+                clearLocation();
+            }
+        }
+
+        // Function to get current location
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                showNotification('La géolocalisation n\'est pas supportée par votre navigateur', 'error');
+                return;
+            }
+            
+            const statusEl = document.getElementById('geolocationStatus');
+            const btnGet = document.getElementById('btnGetLocation');
+            const btnClear = document.getElementById('btnClearLocation');
+            const inputs = document.getElementById('locationInputs');
+            
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Localisation en cours...';
+            btnGet.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentLatitude = position.coords.latitude;
+                    currentLongitude = position.coords.longitude;
+                    useGeolocation = true;
+                    
+                    // Update the input fields
+                    document.getElementById('inputLatitude').value = currentLatitude.toFixed(6);
+                    document.getElementById('inputLongitude').value = currentLongitude.toFixed(6);
+                    
+                    // Update the UI
+                    inputs.classList.remove('hidden');
+                    btnClear.disabled = false;
+                    statusEl.innerHTML = '<i class="fas fa-circle text-green-500 mr-1"></i> Position détectée';
+                    btnGet.innerHTML = '<i class="fas fa-check mr-2"></i>Position obtenue';
+                    
+                    showNotification(`Position obtenue: ${currentLatitude.toFixed(4)}, ${currentLongitude.toFixed(4)}`, 'success');
+                },
+                (error) => {
+                    console.error('Erreur de géolocalisation:', error);
+                    
+                    let errorMessage = 'Impossible d\'obtenir votre position';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Permission de géolocalisation refusée';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Position non disponible';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Délai de localisation dépassé';
+                            break;
+                    }
+                    
+                    statusEl.innerHTML = '<i class="fas fa-circle text-red-500 mr-1"></i> ' + errorMessage;
+                    btnGet.disabled = false;
+                    btnGet.innerHTML = '<i class="fas fa-location-crosshairs mr-2"></i>Réessayer';
+                    
+                    // Display manual input fields
+                    inputs.classList.remove('hidden');
+                    showNotification('Utilisez la saisie manuelle pour la localisation', 'info');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Function to clear location
+        function clearLocation() {
+            useGeolocation = false;
+            currentLatitude = null;
+            currentLongitude = null;
+            
+            document.getElementById('inputLatitude').value = '';
+            document.getElementById('inputLongitude').value = '';
+            document.getElementById('locationInputs').classList.add('hidden');
+            document.getElementById('btnClearLocation').disabled = true;
+            document.getElementById('geolocationStatus').innerHTML = '<i class="fas fa-circle text-yellow-500"></i> Inactive';
+            document.getElementById('btnGetLocation').innerHTML = '<i class="fas fa-location-crosshairs mr-2"></i>Utiliser ma position';
+            document.getElementById('btnGetLocation').disabled = false;
+            
+            showNotification('Géolocalisation désactivée', 'info');
+        }
+
+        // Function to read manual location
+        function getManualLocation() {
+            const latInput = document.getElementById('inputLatitude');
+            const lonInput = document.getElementById('inputLongitude');
+            
+            if (latInput.value && lonInput.value) {
+                currentLatitude = parseFloat(latInput.value);
+                currentLongitude = parseFloat(lonInput.value);
+                useGeolocation = true;
+                
+                document.getElementById('geolocationStatus').innerHTML = '<i class="fas fa-circle text-blue-500 mr-1"></i> Position manuelle';
+                showNotification(`Position définie manuellement`, 'success');
+                return true;
+            }
+            return false;
+        }
+
+        function openImageModal(imageUrl, plantName, similarity) {
+            currentModalImage = imageUrl;
+            
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('modalImageTitle').textContent = plantName || 'Image similaire';
+            document.getElementById('modalImageSimilarity').textContent = 
+                `Similarité: ${(similarity * 100).toFixed(1)}%`;
+            
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            currentModalImage = null;
+        }
+
+        function downloadModalImage() {
+            if (currentModalImage) {
+                const link = document.createElement('a');
+                link.href = currentModalImage;
+                link.download = `plante_similaire_${Date.now()}.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Close modal with ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('imageModal').classList.contains('active')) {
+                closeImageModal();
+            }
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            if (tabName === 'history') refreshHistory();
+            if (tabName === 'dashboard') refreshDashboard();
+            if (tabName === 'profile') loadProfileData();
+        }
+
+        // Drag and drop
+        function setupDragAndDrop() {
+            const zones = ['uploadZone', 'compareUploadZone'];
+
+            zones.forEach(zoneId => {
+                const zone = document.getElementById(zoneId);
+                if (!zone) return;
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    zone.addEventListener(eventName, e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    zone.addEventListener(eventName, () => zone.classList.add('dragover'));
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    zone.addEventListener(eventName, () => zone.classList.remove('dragover'));
+                });
+
+                zone.addEventListener('drop', e => {
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        if (zoneId === 'compareUploadZone') {
+                            handleCompareFile(files[0]);
+                        } else {
+                            handleFile(files[0]);
+                        }
+                    }
+                });
+            });
+        }
+
+        // File handling
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleFile(file);
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('Veuillez sélectionner une image', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('L\'image est trop volumineuse (max 10MB)', 'error');
+                return;
+            }
+
+            currentFile = file;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('uploadZone').classList.add('hidden');
+                document.getElementById('imagePreview').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            currentFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('uploadZone').classList.remove('hidden');
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('analysisResults').classList.add('hidden');
+            document.getElementById('resultBackendBadge').classList.add('hidden');
+
+            // Reset empty state
+            const emptyEl = document.getElementById('analysisEmpty');
+            emptyEl.classList.remove('hidden');
+            emptyEl.innerHTML = `
+                <i class="fas fa-seedling text-5xl mb-4" style="color: var(--border);"></i>
+                <p style="color: var(--text-secondary);">Uploadez une image pour commencer l'analyse</p>
+            `;
+            
+            // Remove any similar images container
+            const similarContainer = document.getElementById('similarImagesContainer');
+            if (similarContainer) {
+                similarContainer.remove();
+            }
+        }
+
+
+        // Compare file handling
+        function handleCompareFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleCompareFile(file);
+        }
+
+        function handleCompareFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('Veuillez sélectionner une image', 'error');
+                return;
+            }
+
+            compareFile = file;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('comparePreviewImg').src = e.target.result;
+                document.getElementById('compareUploadZone').classList.add('hidden');
+                document.getElementById('compareImagePreview').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearCompare() {
+            compareFile = null;
+            document.getElementById('compareFileInput').value = '';
+            document.getElementById('compareUploadZone').classList.remove('hidden');
+            document.getElementById('compareImagePreview').classList.add('hidden');
+            document.getElementById('compareResults').classList.add('hidden');
+        }
+
+
+        // Analyze image
+        async function analyzeImage() {
+            if (!currentFile) return;
+
+            // Show loading
+            document.getElementById('analysisEmpty').classList.add('hidden');
+            document.getElementById('analysisResults').classList.add('hidden');
+            document.getElementById('analysisLoading').classList.remove('hidden');
+
+            // Update loading style based on backend
+            const loader = document.getElementById('analysisLoader');
+            const loadingText = document.getElementById('analysisLoadingText');
+
+            if (selectedBackend === 'external') {
+                loader.classList.add('purple');
+                loadingText.textContent = 'Analyse via Plant.id...';
+            } else if (selectedBackend === 'auto') {
+                loadingText.textContent = 'Analyse (auto-fallback)...';
+            } else {
+                loader.classList.remove('purple');
+                loadingText.textContent = 'Analyse locale...';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('image', currentFile);
+                formData.append('backend', selectedBackend);
+
+                if (selectedBackend === 'external' && (useGeolocation || getManualLocation())) {
+                    if (currentLatitude && currentLongitude) {
+                        formData.append('latitude', currentLatitude);
+                        formData.append('longitude', currentLongitude);
+                    }
+                }
+
+                const headers = {};
+                if (config.apiKey) {
+                    headers['Authorization'] = `Bearer ${config.apiKey}`;
+                }
+
+                const response = await fetch(`${config.apiUrl}/api/v1/analyze`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result) {
+                    displayResults(result);
+                } else {
+                    throw new Error('Réponse invalide du serveur');
+                }
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showNotification('Erreur lors de l\'analyse: ' + error.message, 'error');
+                document.getElementById('analysisLoading').classList.add('hidden');
+                document.getElementById('analysisEmpty').classList.remove('hidden');
+            }
+        }
+
+
+        // Run comparison (both backends)
+        async function runComparison() {
+            if (!compareFile) return;
+
+            document.getElementById('compareImagePreview').classList.add('hidden');
+            document.getElementById('compareLoading').classList.remove('hidden');
+            document.getElementById('compareResults').classList.add('hidden');
+
+            const headers = {};
+            if (config.apiKey) {
+                headers['Authorization'] = `Bearer ${config.apiKey}`;
+            }
+
+            try {
+                // Run both analyses in parallel
+                const [localResult, externalResult] = await Promise.all([
+                    analyzeWithBackend(compareFile, 'local', headers),
+                    analyzeWithBackend(compareFile, 'external', headers)
+                ]);
+
+                displayCompareResults(localResult, externalResult);
+
+            } catch (error) {
+                console.error('Comparison error:', error);
+                showNotification('Erreur lors de la comparaison: ' + error.message, 'error');
+                document.getElementById('compareLoading').classList.add('hidden');
+                document.getElementById('compareImagePreview').classList.remove('hidden');
+            }
+        }
+
+        async function analyzeWithBackend(file, backend, headers) {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('backend', backend);
+
+            const response = await fetch(`${config.apiUrl}/api/v1/analyze`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`${backend}: HTTP ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        function displayCompareResults(localResult, externalResult) {
+            document.getElementById('compareLoading').classList.add('hidden');
+            document.getElementById('compareResults').classList.remove('hidden');
+
+            // Display local results
+            const localContainer = document.getElementById('compareLocalResults');
+            localContainer.innerHTML = formatCompareResult(localResult);
+            document.getElementById('compareLocalTime').textContent =
+                `${Math.round(localResult.metadata?.inference_time_ms || 0)}ms`;
+
+            // Display external results
+            const externalContainer = document.getElementById('compareExternalResults');
+            externalContainer.innerHTML = formatCompareResult(externalResult);
+            document.getElementById('compareExternalTime').textContent =
+                `${Math.round(externalResult.metadata?.inference_time_ms || 0)}ms`;
+        }
+
+        function formatCompareResult(result) {
+            const plantDetected = result.plant_detection?.detected;
+            const species = result.species_identification?.species || '-';
+            const stage = result.growth_stage?.stage || '-';
+            const health = result.health_diagnosis?.status || '-';
+
+            const healthClass = health === 'healthy' || health === 'sain' ? 'status-healthy' :
+                (health.includes('deficiency') || health === 'water_stress') ? 'status-warning' : 'status-critical';
+
+            return `
+                <div class="text-sm space-y-2">
+                    <div class="flex justify-between">
+                        <span style="color: var(--text-secondary);">Plante détectée:</span>
+                        <span class="status-badge ${plantDetected ? 'status-healthy' : 'status-warning'}">
+                            ${plantDetected ? 'Oui' : 'Non'}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span style="color: var(--text-secondary);">Espèce:</span>
+                        <span class="font-medium">${species}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span style="color: var(--text-secondary);">Stade:</span>
+                        <span>${stage}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span style="color: var(--text-secondary);">Santé:</span>
+                        <span class="status-badge ${healthClass}">${health}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Display results
+        function displayResults(result) {
+            document.getElementById('analysisLoading').classList.add('hidden');
+            
+            // Reset the empty state first
+            const emptyEl = document.getElementById('analysisEmpty');
+            emptyEl.innerHTML = `
+                <i class="fas fa-seedling text-5xl mb-4" style="color: var(--border);"></i>
+                <p style="color: var(--text-secondary);">Uploadez une image pour commencer l'analyse</p>
+            `;
+            
+            // Check if it's not a plant
+            if (result.not_a_plant || (result.plant_detection && !result.plant_detection.detected)) {
+                document.getElementById('analysisResults').classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                emptyEl.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-times-circle text-5xl mb-4" style="color: var(--danger);"></i>
+                        <p class="text-xl font-semibold mb-2">Ce n'est pas une plante</p>
+                        <p style="color: var(--text-secondary);">
+                            ${result.message || "L'image fournie ne semble pas contenir une plante identifiable."}
+                        </p>
+                        <p class="text-sm mt-2" style="color: var(--text-secondary);">
+                            Confiance: ${((result.plant_detection?.confidence || 0) * 100).toFixed(1)}%
+                        </p>
+                        <button onclick="clearImage()" class="btn-secondary mt-4">
+                            <i class="fas fa-redo mr-2"></i>Essayer une autre image
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show results section, hide empty
+            emptyEl.classList.add('hidden');
+            document.getElementById('analysisResults').classList.remove('hidden');
+            
+            // Remove any previously added similar images container
+            const oldSimilarContainer = document.getElementById('similarImagesContainer');
+            if (oldSimilarContainer) {
+                oldSimilarContainer.remove();
+            }
+
+            // Show backend badge
+            const backendBadge = document.getElementById('resultBackendBadge');
+            const usedBackend = result.metadata?.backend || selectedBackend;
+
+            backendBadge.className = `backend-badge ${usedBackend} ml-2`;
+            const icons = { local: 'fa-microchip', external: 'fa-cloud', auto: 'fa-magic', 'plant.id': 'fa-cloud' };
+            const labels = { local: 'Local', external: 'Plant.id', auto: 'Auto', 'plant.id': 'Plant.id' };
+
+            backendBadge.innerHTML = `<i class="fas ${icons[usedBackend] || 'fa-robot'}"></i><span>${labels[usedBackend] || usedBackend}</span>`;
+            backendBadge.classList.remove('hidden');
+
+            // Plant detection
+            const plantDetected = result.plant_detection?.detected;
+            const plantConfidence = (result.plant_detection?.confidence || 0) * 100;
+
+            document.getElementById('resultPlantDetection').textContent = plantDetected ? 'Détectée' : 'Non détectée';
+            document.getElementById('resultPlantDetection').className = `status-badge ${plantDetected ? 'status-healthy' : 'status-warning'}`;
+            document.getElementById('resultPlantConfidence').style.width = `${plantConfidence}%`;
+            document.getElementById('resultPlantConfidenceText').textContent = `Confiance: ${plantConfidence.toFixed(1)}%`;
+
+            // Species
+            const species = result.species_identification?.species || '-';
+            const speciesConf = (result.species_identification?.confidence || 0) * 100;
+            document.getElementById('resultSpecies').textContent = species;
+            document.getElementById('resultSpeciesConfidence').style.width = `${speciesConf}%`;
+
+            if (result.species_identification?.top_suggestions?.length > 0 && (result.metadata?.backend === 'plant.id' || result.metadata?.backend === 'external')) {
+                
+                const speciesContainer = document.querySelector('[id^="resultSpecies"]').closest('.result-item');
+                
+                const similarImagesContainer = document.createElement('div');
+                similarImagesContainer.id = 'similarImagesContainer';
+                similarImagesContainer.className = 'mt-3 p-3 rounded-lg fade-in';
+                similarImagesContainer.style.background = 'var(--bg-card)';
+                
+                // Build HTML for each suggestion
+                let similarImagesHTML = '';
+                result.species_identification.top_suggestions.forEach((suggestion, index) => {
+                    similarImagesHTML += `
+                        <div class="mb-3 p-3 rounded-lg border" style="border-color: var(--border);">
+                            <div class="flex justify-between items-center mb-2">
+                                <div>
+                                    <span class="font-medium">${index + 1}. ${suggestion.species || suggestion.name || 'Unknown'}</span>
+                                    <span class="ml-2 text-xs mono" style="color: var(--accent);">
+                                        ${(suggestion.confidence * 100).toFixed(1)}%
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            ${suggestion.common_names && suggestion.common_names.length > 0 ? 
+                                `<p class="text-xs mb-2" style="color: var(--text-secondary);">
+                                    <i class="fas fa-tag mr-1"></i>${suggestion.common_names.join(', ')}
+                                </p>` : ''}
+                            
+                            <!-- Images similaires -->
+                            ${suggestion.similar_images && suggestion.similar_images.length > 0 ? `
+                                <div class="mt-2">
+                                    <p class="text-xs font-medium mb-1" style="color: var(--text-secondary);">
+                                        <i class="fas fa-images mr-1"></i>Plantes similaires:
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        ${suggestion.similar_images.slice(0, 2).map(img => `
+                                            <div class="relative group">
+                                                <img src="${img.url_small || img.url}" 
+                                                    alt="Similar plant" 
+                                                    class="w-full h-24 object-cover rounded-lg cursor-pointer transition-transform group-hover:scale-105"
+                                                    onclick="openImageModal('${img.url || img.url_small}', 
+                                                            '${suggestion.species || suggestion.name}', 
+                                                            ${img.similarity || 0})">
+                                                <div class="absolute bottom-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
+                                                    ${((img.similarity || 0) * 100).toFixed(0)}%
+                                                </div>
+                                                ${img.citation ? `
+                                                    <div class="absolute top-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded opacity-0 group-hover:opacity-100 transition">
+                                                        <i class="fas fa-camera mr-1"></i>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    ${suggestion.similar_images[0]?.citation ? `
+                                        <p class="text-xs mt-1 italic" style="color: var(--text-secondary);">
+                                            Crédit: ${suggestion.similar_images[0].citation}
+                                        </p>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                similarImagesContainer.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold flex items-center">
+                            <i class="fas fa-images mr-2" style="color: var(--purple);"></i>
+                            Suggestions d'identification
+                        </h4>
+                        <button id="toggleSimilarImages" class="text-xs flex items-center gap-1" 
+                                style="color: var(--text-secondary); background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-chevron-down"></i>
+                            <span>Afficher les détails</span>
+                        </button>
+                    </div>
+                    <div id="similarImagesContent" class="hidden">
+                        ${similarImagesHTML}
+                    </div>
+                    <div id="similarImagesSummary" class="text-sm" style="color: var(--text-secondary);">
+                        ${result.species_identification.top_suggestions.length} suggestions disponibles
+                    </div>
+                `;
+                
+                speciesContainer.after(similarImagesContainer);
+                
+                // Toggle visibility of similar images content
+                document.getElementById('toggleSimilarImages').addEventListener('click', function() {
+                    const content = document.getElementById('similarImagesContent');
+                    const summary = document.getElementById('similarImagesSummary');
+                    const isHidden = content.classList.contains('hidden');
+                    
+                    content.classList.toggle('hidden');
+                    summary.classList.toggle('hidden');
+                    
+                    if (isHidden) {
+                        this.innerHTML = '<i class="fas fa-chevron-up"></i><span>Masquer les détails</span>';
+                    } else {
+                        this.innerHTML = '<i class="fas fa-chevron-down"></i><span>Afficher les détails</span>';
+                    }
+                });
+            }
+
+            // Show scientific name if available (external API)
+            const scientificEl = document.getElementById('resultSpeciesScientific');
+            if (result.species_identification?.scientific_name) {
+                scientificEl.textContent = `Nom scientifique: ${result.species_identification.scientific_name}`;
+                scientificEl.classList.remove('hidden');
+            } else {
+                scientificEl.classList.add('hidden');
+            }
+
+            // Growth stage
+            const stage = result.growth_stage?.stage || '-';
+            const stageConf = (result.growth_stage?.confidence || 0) * 100;
+            document.getElementById('resultGrowthStage').textContent = stage;
+            document.getElementById('resultGrowthConfidence').style.width = `${stageConf}%`;
+
+            // Health
+            const health = result.health_diagnosis?.status || '-';
+            const healthEl = document.getElementById('resultHealth');
+            healthEl.textContent = health;
+
+            if (health === 'healthy' || health === 'sain') {
+                healthEl.className = 'status-badge status-healthy';
+            } else if (health.includes('deficiency') || health === 'water_stress' || health === 'stress_hydrique') {
+                healthEl.className = 'status-badge status-warning';
+            } else {
+                healthEl.className = 'status-badge status-critical';
+            }
+
+            let healthDetails = '';
+            if (result.health_diagnosis?.severity) {
+                healthDetails += `Sévérité: ${result.health_diagnosis.severity}`;
+            }
+            if (result.health_diagnosis?.disease_type) {
+                healthDetails += ` | Type: ${result.health_diagnosis.disease_type}`;
+            }
+            document.getElementById('resultHealthDetails').textContent = healthDetails;
+
+            // Disease details (from external API)
+            const diseaseDetailsEl = document.getElementById('resultDiseaseDetails');
+            const diseaseListEl = document.getElementById('resultDiseaseList');
+
+            if (result.health_diagnosis?.diseases && result.health_diagnosis.diseases.length > 0) {
+                diseaseListEl.innerHTML = result.health_diagnosis.diseases.map(disease => `
+                    <div class="p-2 rounded" style="background: var(--bg-dark);">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium">${disease.name}</span>
+                            <span class="text-xs" style="color: var(--text-secondary);">${(disease.probability * 100).toFixed(0)}%</span>
+                        </div>
+                        ${disease.description ? `<p class="text-xs mt-1" style="color: var(--text-secondary);">${disease.description.substring(0, 100)}...</p>` : ''}
+                        ${disease.treatment ? `<p class="text-xs mt-1" style="color: var(--primary);"><i class="fas fa-pills mr-1"></i>${disease.treatment}</p>` : ''}
+                    </div>
+                `).join('');
+                diseaseDetailsEl.classList.remove('hidden');
+            } else {
+                diseaseDetailsEl.classList.add('hidden');
+            }
+
+            // Inference time
+            const inferenceTime = result.metadata?.inference_time_ms || 0;
+            document.getElementById('resultInferenceTime').textContent = `${Math.round(inferenceTime)} ms`;
+
+            // Recommendations
+            const recsContainer = document.getElementById('resultRecommendations');
+            recsContainer.innerHTML = '';
+
+            if (result.recommendations?.actions?.length > 0) {
+                result.recommendations.actions.forEach(action => {
+                    const priorityColors = {
+                        'critical': 'var(--danger)',
+                        'high': 'var(--accent)',
+                        'medium': 'var(--secondary)',
+                        'low': 'var(--text-secondary)'
+                    };
+
+                    const actionEl = document.createElement('div');
+                    actionEl.className = 'flex items-start gap-2 text-sm';
+                    actionEl.innerHTML = `
+                        <i class="fas fa-arrow-right mt-1" style="color: ${priorityColors[action.priority] || 'var(--primary)'};"></i>
+                        <div>
+                            <span class="font-medium">${action.description}</span>
+                            ${action.timing ? `<p class="text-xs" style="color: var(--text-secondary);">⏱ ${action.timing}</p>` : ''}
+                        </div>
+                    `;
+                    recsContainer.appendChild(actionEl);
+                });
+            } else {
+                recsContainer.innerHTML = '<p style="color: var(--text-secondary);">Aucune action requise</p>';
+            }
+
+            if (result.recommendations?.summary) {
+                const summaryEl = document.createElement('p');
+                summaryEl.className = 'mt-3 text-sm italic';
+                summaryEl.style.color = 'var(--text-secondary)';
+                summaryEl.textContent = result.recommendations.summary;
+                recsContainer.appendChild(summaryEl);
+            }
+        }
+
+
+        // Webcam functions
+        async function startWebcam() {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: 1280, height: 720 }
+                });
+
+                const video = document.getElementById('webcamVideo');
+                video.srcObject = webcamStream;
+                video.classList.remove('hidden');
+                document.getElementById('webcamPlaceholder').classList.add('hidden');
+
+                document.getElementById('btnStartWebcam').classList.add('hidden');
+                document.getElementById('btnStopWebcam').classList.remove('hidden');
+                document.getElementById('btnCapture').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Webcam error:', error);
+                showNotification('Impossible d\'accéder à la webcam', 'error');
+            }
+        }
+
+        function stopWebcam() {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+
+            document.getElementById('webcamVideo').classList.add('hidden');
+            document.getElementById('webcamPlaceholder').classList.remove('hidden');
+
+            document.getElementById('btnStartWebcam').classList.remove('hidden');
+            document.getElementById('btnStopWebcam').classList.add('hidden');
+            document.getElementById('btnCapture').classList.add('hidden');
+        }
+
+        function captureWebcam() {
+            const video = document.getElementById('webcamVideo');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            canvas.toBlob(blob => {
+                currentFile = new File([blob], 'webcam-capture.jpg', { type: 'image/jpeg' });
+
+                document.getElementById('previewImg').src = canvas.toDataURL('image/jpeg');
+                document.getElementById('uploadZone').classList.add('hidden');
+                document.getElementById('imagePreview').classList.remove('hidden');
+
+                switchTab('analyze');
+                analyzeImage();
+            }, 'image/jpeg', 0.9);
+        }
+
+
+        // History functions
+        async function refreshHistory() {
+            try {
+                const headers = {};
+                if (config.apiKey) {
+                    headers['Authorization'] = `Bearer ${config.apiKey}`;
+                }
+
+                const response = await fetch(`${config.apiUrl}/api/v1/history?page_size=20`, { headers });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                displayHistory(data.entries || []);
+
+            } catch (error) {
+                console.error('History error:', error);
+            }
+        }
+
+        function displayHistory(entries) {
+            const tbody = document.getElementById('historyTableBody');
+
+            if (entries.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8" style="color: var(--text-secondary);">
+                            <i class="fas fa-inbox text-3xl mb-2 block"></i>
+                            Aucune analyse dans l'historique
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = entries.map(entry => {
+                const backend = entry.backend || 'local';
+                const backendClass = backend === 'external' || backend === 'plant.id' ? 'status-external' : 'status-healthy';
+
+                return `
+                    <tr class="history-row border-b" style="border-color: var(--border);">
+                        <td class="py-3 px-4">${new Date(entry.timestamp).toLocaleString('fr-FR')}</td>
+                        <td class="py-3 px-4">${entry.species || '-'}</td>
+                        <td class="py-3 px-4">${entry.growth_stage || '-'}</td>
+                        <td class="py-3 px-4">
+                            <span class="status-badge ${entry.health_status === 'healthy' || entry.health_status === 'sain' ? 'status-healthy' : 'status-warning'}">
+                                ${entry.health_status || '-'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="status-badge ${backendClass}">
+                                ${backend === 'external' || backend === 'plant.id' ? 'Plant.id' : 'Local'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <button onclick="viewAnalysis('${entry.analysis_id}')" class="text-sm" style="color: var(--primary);">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+
+        // Dashboard functions
+        async function refreshDashboard() {
+            if (!currentUser) {
+                // Display message if not connected
+                document.getElementById('statTotalAnalyses').textContent = '0';
+                document.getElementById('statPlantsDetected').textContent = '0';
+                document.getElementById('statHealthy').textContent = '0%';
+                document.getElementById('statAvgTime').textContent = '0ms';
+                document.getElementById('speciesChart').innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary);">Connectez-vous pour voir vos statistiques</p>';
+                document.getElementById('healthChart').innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary);">Connectez-vous pour voir vos statistiques</p>';
+                document.getElementById('dailyChart').innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary);">Connectez-vous pour voir vos statistiques</p>';
+                document.getElementById('adminStatsSection').classList.add('hidden');
+                document.getElementById('adminUserFilter').classList.add('hidden');
+                return;
+            }
+            
+            // Show admin controls for super admin
+            if (currentUser.is_super_admin) {
+                document.getElementById('adminUserFilter').classList.remove('hidden');
+                document.getElementById('adminStatsSection').classList.remove('hidden');
+            }
+            
+            // Handle custom date range
+            const period = document.getElementById('dashboardPeriod').value;
+            const customRange = document.getElementById('customDateRange');
+            
+            if (period === 'custom') {
+                customRange.classList.remove('hidden');
+            } else {
+                customRange.classList.add('hidden');
+            }
+            
+            // Build query params
+            let params = new URLSearchParams();
+            
+            if (period !== 'all' && period !== 'custom') {
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - parseInt(period));
+                params.append('start_date', startDate.toISOString());
+            } else if (period === 'custom') {
+                const startDate = document.getElementById('dashboardStartDate').value;
+                const endDate = document.getElementById('dashboardEndDate').value;
+                if (startDate) params.append('start_date', new Date(startDate).toISOString());
+                if (endDate) params.append('end_date', new Date(endDate).toISOString());
+            }
+            
+            // Admin scope
+            const scope = document.getElementById('dashboardUserScope')?.value || 'me';
+            if (currentUser.is_super_admin && scope === 'all') {
+                params.append('all_users', 'true');
+            }
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/history/stats?${params}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const stats = await response.json();
+
+                // Update stat cards
+                document.getElementById('statTotalAnalyses').textContent = stats.total_analyses || 0;
+                document.getElementById('statPlantsDetected').textContent = stats.plants_detected || 0;
+                document.getElementById('statHealthy').textContent = `${stats.detection_rate || 0}%`;
+                document.getElementById('statAvgTime').textContent = `${Math.round(stats.avg_processing_time_ms || 0)}ms`;
+
+                // Update species chart
+                updateSpeciesChart(stats.species_distribution || {});
+                
+                // Update health chart
+                updateHealthChart(stats.health_distribution || {});
+                
+                // Update daily chart
+                updateDailyChart(stats.daily_analyses || []);
+                
+                // Admin stats
+                if (currentUser.is_super_admin && scope === 'all') {
+                    loadAdminStats();
+                }
+
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        function updateSpeciesChart(distribution) {
+            const container = document.getElementById('speciesChart');
+            const entries = Object.entries(distribution).sort((a, b) => b[1] - a[1]).slice(0, 6);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary);">Pas de données</p>';
+                return;
+            }
+            
+            const maxVal = Math.max(...entries.map(e => e[1]));
+            
+            container.innerHTML = entries.map(([species, count]) => `
+                <div class="flex items-center gap-3">
+                    <span class="w-32 text-sm truncate" title="${species}">${species || 'Inconnu'}</span>
+                    <div class="flex-1 bg-gray-700 rounded-full h-4 overflow-hidden">
+                        <div class="h-full rounded-full transition-all" 
+                             style="width: ${(count / maxVal) * 100}%; background: var(--primary);"></div>
+                    </div>
+                    <span class="text-sm font-medium w-8 text-right">${count}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateHealthChart(distribution) {
+            const container = document.getElementById('healthChart');
+            const entries = Object.entries(distribution);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary);">Pas de données</p>';
+                return;
+            }
+            
+            const colors = {
+                'healthy': 'var(--primary)',
+                'sain': 'var(--primary)',
+                'disease': 'var(--danger)',
+                'malade': 'var(--danger)',
+                'water_stress': 'var(--accent)',
+                'stress_hydrique': 'var(--accent)',
+                'nitrogen_deficiency': 'var(--secondary)',
+                'unknown': 'var(--text-secondary)'
+            };
+            
+            const maxVal = Math.max(...entries.map(e => e[1]));
+            
+            container.innerHTML = entries.map(([status, count]) => `
+                <div class="flex items-center gap-3">
+                    <span class="w-32 text-sm truncate" title="${status}">${status || 'Inconnu'}</span>
+                    <div class="flex-1 bg-gray-700 rounded-full h-4 overflow-hidden">
+                        <div class="h-full rounded-full transition-all" 
+                             style="width: ${(count / maxVal) * 100}%; background: ${colors[status] || 'var(--secondary)'};"></div>
+                    </div>
+                    <span class="text-sm font-medium w-8 text-right">${count}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateDailyChart(dailyData) {
+            const container = document.getElementById('dailyChart');
+            
+            if (dailyData.length === 0) {
+                container.innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary);">Pas de données</p>';
+                return;
+            }
+            
+            const maxVal = Math.max(...dailyData.map(d => d.count));
+            
+            container.innerHTML = `
+                <div class="flex items-end justify-between h-40 gap-1">
+                    ${dailyData.slice(-30).map(d => `
+                        <div class="flex-1 flex flex-col items-center group relative">
+                            <div class="absolute -top-8 bg-gray-800 px-2 py-1 rounded text-xs hidden group-hover:block whitespace-nowrap z-10">
+                                ${new Date(d.date).toLocaleDateString('fr-FR')} : ${d.count}
+                            </div>
+                            <div class="w-full rounded-t transition-all hover:opacity-80" 
+                                 style="height: ${(d.count / maxVal) * 100}%; min-height: 4px; background: var(--primary);"></div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="flex justify-between text-xs mt-2" style="color: var(--text-secondary);">
+                    <span>${dailyData.length > 0 ? new Date(dailyData[0].date).toLocaleDateString('fr-FR', {day: '2-digit', month: 'short'}) : ''}</span>
+                    <span>${dailyData.length > 0 ? new Date(dailyData[dailyData.length-1].date).toLocaleDateString('fr-FR', {day: '2-digit', month: 'short'}) : ''}</span>
+                </div>
+            `;
+        }
+
+        async function loadAdminStats() {
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/history/admin-stats`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) return;
+                
+                const stats = await response.json();
+                
+                document.getElementById('adminStatUsers').textContent = stats.total_users || 0;
+                document.getElementById('adminStatTotalAnalyses').textContent = stats.total_analyses || 0;
+                document.getElementById('adminStatToday').textContent = stats.analyses_today || 0;
+                
+                // Update top users table
+                const tbody = document.getElementById('topUsersTable');
+                if (stats.top_users && stats.top_users.length > 0) {
+                    tbody.innerHTML = stats.top_users.map((user, index) => `
+                        <tr class="border-b" style="border-color: var(--border);">
+                            <td class="py-2">${index + 1}</td>
+                            <td class="py-2">
+                                ${user.username || user.guest_id || 'Invité'}
+                                ${user.is_guest ? '<span class="text-xs ml-1" style="color: var(--text-secondary);">(invité)</span>' : ''}
+                            </td>
+                            <td class="py-2">${user.analysis_count}</td>
+                            <td class="py-2">${user.healthy_rate || 0}%</td>
+                            <td class="py-2">${user.last_activity ? new Date(user.last_activity).toLocaleDateString('fr-FR') : '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="color: var(--text-secondary);">Aucune donnée</td></tr>';
+                }
+                
+            } catch (error) {
+                console.error('Admin stats error:', error);
+            }
+        }
+
+
+        // Profile functions
+        function loadProfileData() {
+            if (!currentUser) return;
+            
+            document.getElementById('profileUsername').textContent = currentUser.username;
+            document.getElementById('profileEmail').textContent = currentUser.email || 'Non renseigné';
+            document.getElementById('profileInitial').textContent = currentUser.username.charAt(0).toUpperCase();
+            document.getElementById('profileCreatedAt').textContent = 
+                currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString('fr-FR') : '-';
+            
+            if (currentUser.is_super_admin) {
+                document.getElementById('profileBadge').classList.remove('hidden');
+                document.getElementById('profileBadge').textContent = 'Super Admin';
+                document.getElementById('profileBadge').className = 'status-badge status-external';
+            } else if (currentUser.is_admin) {
+                document.getElementById('profileBadge').classList.remove('hidden');
+                document.getElementById('profileBadge').textContent = 'Admin';
+            }
+            
+            // Load stats
+            loadProfileStats();
+            
+            if (currentUser.created_at) {
+                document.getElementById('profileCreatedAt').textContent = new Date(currentUser.created_at).toLocaleDateString('fr-FR');
+            }
+            if (currentUser.last_login) {
+                document.getElementById('profileLastLogin').textContent = new Date(currentUser.last_login).toLocaleString('fr-FR');
+            }
+        }
+
+        async function loadProfileStats() {
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/history/stats`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('profileStatAnalyses').textContent = stats.total_analyses || 0;
+                    document.getElementById('profileStatPlants').textContent = stats.plants_detected || 0;
+                    document.getElementById('profileStatHealthy').textContent = `${stats.detection_rate || 0}%`;
+                    
+                    if (stats.daily_analyses && stats.daily_analyses.length > 0) {
+                        const lastDate = stats.daily_analyses[stats.daily_analyses.length - 1].date;
+                        document.getElementById('profileStatLastAnalysis').textContent = 
+                            new Date(lastDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load profile stats:', error);
+            }
+        }
+
+        async function handleChangeUsername(event) {
+            event.preventDefault();
+            
+            const newUsername = document.getElementById('newUsername').value;
+            const errorEl = document.getElementById('usernameError');
+            const successEl = document.getElementById('usernameSuccess');
+            
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/change-username?new_username=${encodeURIComponent(newUsername)}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur lors du changement');
+                }
+                
+                // Refresh user info
+                await fetchCurrentUser();
+                loadProfile();
+                updateAuthUI();
+                
+                successEl.textContent = 'Nom d\'utilisateur modifié avec succès!';
+                successEl.classList.remove('hidden');
+                document.getElementById('newUsername').value = '';
+                
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        async function handleChangePassword(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorEl = document.getElementById('passwordError');
+            const successEl = document.getElementById('passwordSuccess');
+            
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+            
+            if (newPassword !== confirmPassword) {
+                errorEl.textContent = 'Les mots de passe ne correspondent pas';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch(
+                    `${config.apiUrl}/api/v1/auth/change-password?current_password=${encodeURIComponent(currentPassword)}&new_password=${encodeURIComponent(newPassword)}`, 
+                    {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }
+                );
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur lors du changement');
+                }
+                
+                successEl.textContent = 'Mot de passe modifié avec succès!';
+                successEl.classList.remove('hidden');
+                document.getElementById('changePasswordForm').reset();
+                
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+
+        // Settings
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            checkPlantIdStatus();
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        async function checkPlantIdStatus() {
+            const statusEl = document.getElementById('plantIdStatus');
+
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/analyze/backends`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const externalAvailable = data.backends?.external?.available;
+
+                    if (externalAvailable) {
+                        statusEl.innerHTML = `
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span style="color: var(--primary);">Configuré et disponible</span>
+                        `;
+                    } else {
+                        statusEl.innerHTML = `
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            <span style="color: var(--accent);">Non configuré (mode simulation)</span>
+                        `;
+                    }
+                } else {
+                    throw new Error('API error');
+                }
+            } catch (error) {
+                statusEl.innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span style="color: var(--danger);">Impossible de vérifier</span>
+                `;
+            }
+        }
+
+        function saveSettings() {
+            config.apiUrl = document.getElementById('apiUrlInput').value || 'http://localhost:8000';
+            config.apiKey = document.getElementById('apiKeyInput').value;
+            config.defaultBackend = document.getElementById('defaultBackendSelect').value;
+
+            // Apply default backend
+            selectBackend(config.defaultBackend);
+
+            closeSettings();
+            checkConnection();
+            showNotification('Paramètres enregistrés', 'success');
+        }
+
+        // Connection check
+        async function checkConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+
+            try {
+                const response = await fetch(`${config.apiUrl}/health`, { timeout: 5000 });
+
+                if (response.ok) {
+                    statusEl.innerHTML = `
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span style="color: var(--text-secondary);">Connecté</span>
+                    `;
+                } else {
+                    throw new Error('Not OK');
+                }
+            } catch (error) {
+                statusEl.innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span style="color: var(--text-secondary);">Hors ligne</span>
+                `;
+            }
+        }
+
+
+        // Notifications
+        function showNotification(message, type = 'info') {
+            const colors = {
+                'success': 'var(--primary)',
+                'error': 'var(--danger)',
+                'info': 'var(--secondary)'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white fade-in z-50';
+            notification.style.background = colors[type];
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+
+        // View single analysis
+        async function viewAnalysis(analysisId) {
+            try {
+                const headers = {};
+                if (config.apiKey) {
+                    headers['Authorization'] = `Bearer ${config.apiKey}`;
+                }
+
+                const response = await fetch(`${config.apiUrl}/api/v1/analyze/${analysisId}`, { headers });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const result = await response.json();
+                switchTab('analyze');
+                displayResults(result);
+
+            } catch (error) {
+                showNotification('Impossible de charger l\'analyse', 'error');
+            }
+        }
+
+
+        // Close modal on backdrop click
+        document.getElementById('settingsModal').addEventListener('click', e => {
+            if (e.target.id === 'settingsModal') closeSettings();
+        });
+    </script>
+</body>
+</html>
