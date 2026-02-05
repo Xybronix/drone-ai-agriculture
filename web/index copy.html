@@ -632,6 +632,15 @@
 
                         <!-- Results -->
                         <div id="analysisResults" class="hidden space-y-4">
+                            <!-- Plant Image (for Plant.id) -->
+                            <div id="resultPlantImageContainer" class="result-item p-4 rounded-lg hidden" style="background: var(--bg-dark);">
+                                <h3 class="font-semibold mb-3">
+                                    <i class="fas fa-image mr-2" style="color: var(--purple);"></i>
+                                    Image Analysée
+                                </h3>
+                                <img id="resultPlantImage" src="" alt="Plante analysée" class="w-full rounded-lg max-h-96 object-contain bg-gray-900">
+                            </div>
+                            
                             <!-- Plant Detection -->
                             <div class="result-item p-4 rounded-lg" style="background: var(--bg-dark);">
                                 <div class="flex items-center justify-between mb-2">
@@ -1120,7 +1129,7 @@
                     <hr style="border-color: var(--border);" class="my-6">
 
                     <!-- Account Stats -->
-                    <div class="card p-6">
+                    <div class="card p-6 mb-4">
                         <h3 class="font-semibold mb-4">
                             <i class="fas fa-chart-pie mr-2" style="color: var(--purple);"></i>
                             Mes Statistiques
@@ -1142,6 +1151,47 @@
                                 <p class="text-2xl font-bold" style="color: var(--accent);" id="profileStatLastAnalysis">-</p>
                                 <p class="text-xs" style="color: var(--text-secondary);">Dernière</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- User Management (Super Admin Only) -->
+                    <div id="userManagementSection" class="card p-6 hidden">
+                        <h3 class="font-semibold mb-4">
+                            <i class="fas fa-users-cog mr-2" style="color: var(--purple);"></i>
+                            Gestion des Utilisateurs
+                        </h3>
+                        
+                        <div class="mb-4 flex items-center justify-between">
+                            <p class="text-sm" style="color: var(--text-secondary);">
+                                Gérer tous les utilisateurs du système
+                            </p>
+                            <button onclick="refreshUsersList()" class="btn-secondary text-sm">
+                                <i class="fas fa-sync-alt mr-2"></i>Actualiser
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b" style="border-color: var(--border);">
+                                        <th class="text-left py-2 px-2">ID</th>
+                                        <th class="text-left py-2 px-2">Nom d'utilisateur</th>
+                                        <th class="text-left py-2 px-2">Email</th>
+                                        <th class="text-left py-2 px-2">Statut</th>
+                                        <th class="text-left py-2 px-2">Rôle</th>
+                                        <th class="text-left py-2 px-2">Créé le</th>
+                                        <th class="text-left py-2 px-2">Dernière connexion</th>
+                                        <th class="text-left py-2 px-2">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4" style="color: var(--text-secondary);">
+                                            Chargement...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1536,19 +1586,37 @@
                 updateAuthUI();
                 showNotification('Connexion réussie!', 'success');
 
-                // Refresh dashboard/profil if active
+                // Force refresh of all data after login
                 const activeTab = document.querySelector('.nav-tab.active');
                 if (activeTab) {
                     const tabName = activeTab.dataset.tab;
                     if (tabName === 'dashboard') {
-                        refreshDashboard();
+                        // Force refresh dashboard
+                        setTimeout(() => refreshDashboard(), 100);
                     } else if (tabName === 'profile') {
-                        loadProfileData();
+                        // Force refresh profile
+                        setTimeout(() => loadProfileData(), 100);
+                    } else if (tabName === 'history') {
+                        // Force refresh history
+                        setTimeout(() => refreshHistory(), 100);
                     }
                 }
                 
+                // Also refresh any other visible tabs
+                setTimeout(() => {
+                    if (!document.getElementById('tab-dashboard').classList.contains('hidden')) {
+                        refreshDashboard();
+                    }
+                    if (!document.getElementById('tab-profile').classList.contains('hidden')) {
+                        loadProfileData();
+                    }
+                    if (!document.getElementById('tab-history').classList.contains('hidden')) {
+                        refreshHistory();
+                    }
+                }, 200);
+                
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
             }
         }
@@ -1585,7 +1653,7 @@
                 }, 2000);
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
                 successEl.classList.add('hidden');
             }
@@ -1636,23 +1704,30 @@
             updateAuthUI();
             showNotification('Déconnexion réussie', 'info');
 
+            // Force refresh all tabs to clear data
             if (document.getElementById('tab-dashboard').classList.contains('hidden') === false) {
-                refreshDashboard();
+                setTimeout(() => refreshDashboard(), 100);
             }
 
             if (document.getElementById('tab-profile').classList.contains('hidden') === false) {
                 // Reinitialize profile
-                document.getElementById('profileUsername').textContent = '-';
-                document.getElementById('profileEmail').textContent = '-';
-                document.getElementById('profileInitial').textContent = '?';
-                document.getElementById('profileStatAnalyses').textContent = '0';
-                document.getElementById('profileStatPlants').textContent = '0';
-                document.getElementById('profileStatHealthy').textContent = '0%';
-                document.getElementById('profileStatLastAnalysis').textContent = '-';
-                document.getElementById('profileBadge').classList.add('hidden');
-                document.getElementById('profileCreatedAt').textContent = '-';
-                document.getElementById('profileLastLogin').textContent = '-';
+                setTimeout(() => {
+                    document.getElementById('profileUsername').textContent = '-';
+                    document.getElementById('profileEmail').textContent = '-';
+                    document.getElementById('profileInitial').textContent = '?';
+                    document.getElementById('profileStatAnalyses').textContent = '0';
+                    document.getElementById('profileStatPlants').textContent = '0';
+                    document.getElementById('profileStatHealthy').textContent = '0%';
+                    document.getElementById('profileStatLastAnalysis').textContent = '-';
+                    document.getElementById('profileBadge').classList.add('hidden');
+                    document.getElementById('profileCreatedAt').textContent = '-';
+                    document.getElementById('profileLastLogin').textContent = '-';
+                }, 100);
             }
+            
+            // Hide admin sections
+            document.getElementById('adminUserFilter').classList.add('hidden');
+            document.getElementById('adminStatsSection').classList.add('hidden');
             
             // Switch to analyze tab if on restricted tab
             const activeTab = document.querySelector('.nav-tab.active');
@@ -1707,13 +1782,13 @@
             
             originalSwitchTab(tabName);
 
-            // Refresh data when switching
+            // Refresh data when switching - force refresh to ensure latest data
             if (tabName === 'profile' && currentUser) {
-                loadProfileData();
+                setTimeout(() => loadProfileData(), 100);
             } else if (tabName === 'dashboard' && currentUser) {
-                refreshDashboard();
+                setTimeout(() => refreshDashboard(), 100);
             } else if (tabName === 'history' && currentUser) {
-                refreshHistory();
+                setTimeout(() => refreshHistory(), 100);
             }
         };
 
@@ -2093,7 +2168,7 @@
 
             } catch (error) {
                 console.error('Analysis error:', error);
-                showNotification('Erreur lors de l\'analyse: ' + error.message, 'error');
+                showNotification('Erreur lors de l\'analyse: ' + getErrorMessage(error), 'error');
                 document.getElementById('analysisLoading').classList.add('hidden');
                 document.getElementById('analysisEmpty').classList.remove('hidden');
             }
@@ -2124,7 +2199,7 @@
 
             } catch (error) {
                 console.error('Comparison error:', error);
-                showNotification('Erreur lors de la comparaison: ' + error.message, 'error');
+                showNotification('Erreur lors de la comparaison: ' + getErrorMessage(error), 'error');
                 document.getElementById('compareLoading').classList.add('hidden');
                 document.getElementById('compareImagePreview').classList.remove('hidden');
             }
@@ -2252,6 +2327,16 @@
             backendBadge.innerHTML = `<i class="fas ${icons[usedBackend] || 'fa-robot'}"></i><span>${labels[usedBackend] || usedBackend}</span>`;
             backendBadge.classList.remove('hidden');
 
+            // Show plant image for Plant.id analyses
+            const plantImageContainer = document.getElementById('resultPlantImageContainer');
+            const plantImage = document.getElementById('resultPlantImage');
+            if ((usedBackend === 'plant.id' || usedBackend === 'external') && document.getElementById('previewImg').src) {
+                plantImage.src = document.getElementById('previewImg').src;
+                plantImageContainer.classList.remove('hidden');
+            } else {
+                plantImageContainer.classList.add('hidden');
+            }
+
             // Plant detection
             const plantDetected = result.plant_detection?.detected;
             const plantConfidence = (result.plant_detection?.confidence || 0) * 100;
@@ -2340,14 +2425,14 @@
                         </h4>
                         <button id="toggleSimilarImages" class="text-xs flex items-center gap-1" 
                                 style="color: var(--text-secondary); background: none; border: none; cursor: pointer;">
-                            <i class="fas fa-chevron-down"></i>
-                            <span>Afficher les détails</span>
+                            <i class="fas fa-chevron-up"></i>
+                            <span>Masquer les détails</span>
                         </button>
                     </div>
-                    <div id="similarImagesContent" class="hidden">
+                    <div id="similarImagesContent">
                         ${similarImagesHTML}
                     </div>
-                    <div id="similarImagesSummary" class="text-sm" style="color: var(--text-secondary);">
+                    <div id="similarImagesSummary" class="text-sm hidden" style="color: var(--text-secondary);">
                         ${result.species_identification.top_suggestions.length} suggestions disponibles
                     </div>
                 `;
@@ -2607,10 +2692,13 @@
                 return;
             }
             
-            // Show admin controls for super admin
-            if (currentUser.is_super_admin) {
+            // Show admin controls only for super admin
+            if (currentUser && currentUser.is_super_admin) {
                 document.getElementById('adminUserFilter').classList.remove('hidden');
                 document.getElementById('adminStatsSection').classList.remove('hidden');
+            } else {
+                document.getElementById('adminUserFilter').classList.add('hidden');
+                document.getElementById('adminStatsSection').classList.add('hidden');
             }
             
             // Handle custom date range
@@ -2637,9 +2725,9 @@
                 if (endDate) params.append('end_date', new Date(endDate).toISOString());
             }
             
-            // Admin scope
+            // Admin scope - only super admin can see all users' data
             const scope = document.getElementById('dashboardUserScope')?.value || 'me';
-            if (currentUser.is_super_admin && scope === 'all') {
+            if (currentUser && currentUser.is_super_admin && scope === 'all') {
                 params.append('all_users', 'true');
             }
             
@@ -2667,8 +2755,8 @@
                 // Update daily chart
                 updateDailyChart(stats.daily_analyses || []);
                 
-                // Admin stats
-                if (currentUser.is_super_admin && scope === 'all') {
+                // Admin stats - only for super admin when viewing all users
+                if (currentUser && currentUser.is_super_admin && scope === 'all') {
                     loadAdminStats();
                 }
 
@@ -2816,9 +2904,15 @@
                 document.getElementById('profileBadge').classList.remove('hidden');
                 document.getElementById('profileBadge').textContent = 'Super Admin';
                 document.getElementById('profileBadge').className = 'status-badge status-external';
-            } else if (currentUser.is_admin) {
-                document.getElementById('profileBadge').classList.remove('hidden');
-                document.getElementById('profileBadge').textContent = 'Admin';
+                // Show user management section for super admin
+                document.getElementById('userManagementSection').classList.remove('hidden');
+                refreshUsersList();
+            } else {
+                document.getElementById('userManagementSection').classList.add('hidden');
+                if (currentUser.is_admin) {
+                    document.getElementById('profileBadge').classList.remove('hidden');
+                    document.getElementById('profileBadge').textContent = 'Admin';
+                }
             }
             
             // Load stats
@@ -2886,8 +2980,173 @@
                 document.getElementById('newUsername').value = '';
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
+            }
+        }
+
+        // User Management functions (Super Admin only)
+        async function refreshUsersList() {
+            if (!currentUser || !currentUser.is_super_admin) return;
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/users`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des utilisateurs');
+                }
+                
+                const users = await response.json();
+                displayUsersList(users);
+                
+            } catch (error) {
+                console.error('Failed to load users:', error);
+                showNotification('Erreur lors du chargement des utilisateurs', 'error');
+            }
+        }
+
+        function displayUsersList(users) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4" style="color: var(--text-secondary);">
+                            Aucun utilisateur trouvé
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = users.map(user => {
+                const isCurrentUser = user.id === currentUser.id;
+                const statusBadge = user.is_active 
+                    ? '<span class="status-badge status-healthy">Actif</span>'
+                    : '<span class="status-badge status-critical">Inactif</span>';
+                
+                let roleBadge = '<span class="text-xs" style="color: var(--text-secondary);">Utilisateur</span>';
+                if (user.is_super_admin) {
+                    roleBadge = '<span class="status-badge status-external">Super Admin</span>';
+                } else if (user.is_admin) {
+                    roleBadge = '<span class="status-badge status-healthy">Admin</span>';
+                }
+                
+                return `
+                    <tr class="border-b" style="border-color: var(--border);">
+                        <td class="py-2 px-2">${user.id}</td>
+                        <td class="py-2 px-2">${user.username}</td>
+                        <td class="py-2 px-2">${user.email || '-'}</td>
+                        <td class="py-2 px-2">${statusBadge}</td>
+                        <td class="py-2 px-2">${roleBadge}</td>
+                        <td class="py-2 px-2 text-xs" style="color: var(--text-secondary);">
+                            ${user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '-'}
+                        </td>
+                        <td class="py-2 px-2 text-xs" style="color: var(--text-secondary);">
+                            ${user.last_login ? new Date(user.last_login).toLocaleString('fr-FR') : 'Jamais'}
+                        </td>
+                        <td class="py-2 px-2">
+                            <div class="flex gap-2">
+                                <button onclick="toggleUserActive(${user.id}, ${!user.is_active})" 
+                                        class="text-xs px-2 py-1 rounded" 
+                                        style="background: var(--bg-card); color: var(--text-primary);"
+                                        ${isCurrentUser ? 'disabled title="Vous ne pouvez pas modifier votre propre compte"' : ''}>
+                                    <i class="fas ${user.is_active ? 'fa-ban' : 'fa-check'}"></i>
+                                    ${user.is_active ? 'Désactiver' : 'Activer'}
+                                </button>
+                                ${!user.is_super_admin ? `
+                                    <button onclick="toggleUserAdmin(${user.id}, ${!user.is_admin})" 
+                                            class="text-xs px-2 py-1 rounded" 
+                                            style="background: var(--bg-card); color: var(--text-primary);"
+                                            ${isCurrentUser ? 'disabled title="Vous ne pouvez pas modifier votre propre rôle"' : ''}>
+                                        <i class="fas ${user.is_admin ? 'fa-user-minus' : 'fa-user-shield'}"></i>
+                                        ${user.is_admin ? 'Retirer Admin' : 'Promouvoir Admin'}
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteUser(${user.id})" 
+                                        class="text-xs px-2 py-1 rounded" 
+                                        style="background: var(--danger); color: white;"
+                                        ${isCurrentUser ? 'disabled title="Vous ne pouvez pas supprimer votre propre compte"' : ''}>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function toggleUserActive(userId, newStatus) {
+            if (!confirm(`Êtes-vous sûr de vouloir ${newStatus ? 'activer' : 'désactiver'} cet utilisateur ?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/users/${userId}?is_active=${newStatus}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur lors de la modification');
+                }
+                
+                showNotification(`Utilisateur ${newStatus ? 'activé' : 'désactivé'} avec succès`, 'success');
+                refreshUsersList();
+                
+            } catch (error) {
+                showNotification(getErrorMessage(error), 'error');
+            }
+        }
+
+        async function toggleUserAdmin(userId, newStatus) {
+            if (!confirm(`Êtes-vous sûr de vouloir ${newStatus ? 'promouvoir' : 'retirer le rôle admin de'} cet utilisateur ?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/users/${userId}?is_admin=${newStatus}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur lors de la modification');
+                }
+                
+                showNotification(`Rôle admin ${newStatus ? 'ajouté' : 'retiré'} avec succès`, 'success');
+                refreshUsersList();
+                
+            } catch (error) {
+                showNotification(getErrorMessage(error), 'error');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${config.apiUrl}/api/v1/auth/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur lors de la suppression');
+                }
+                
+                showNotification('Utilisateur supprimé avec succès', 'success');
+                refreshUsersList();
+                
+            } catch (error) {
+                showNotification(getErrorMessage(error), 'error');
             }
         }
 
@@ -2928,7 +3187,7 @@
                 document.getElementById('changePasswordForm').reset();
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
             }
         }
@@ -3013,8 +3272,44 @@
         }
 
 
-        // Notifications
+        // Helper function to extract error message from various error types
+        function getErrorMessage(error) {
+            if (!error) return 'Une erreur inconnue s\'est produite';
+            
+            // If it's already a string, return it
+            if (typeof error === 'string') return error;
+            
+            // If it's an Error object, return the message
+            if (error instanceof Error) return error.message;
+            
+            // If it's an object with a message property
+            if (error.message && typeof error.message === 'string') return error.message;
+            
+            // If it's an object with a detail property (FastAPI errors)
+            if (error.detail && typeof error.detail === 'string') return error.detail;
+            
+            // If it's an object with an error property
+            if (error.error && typeof error.error === 'string') return error.error;
+            
+            // If it's an object, try to stringify it (but prefer message/detail)
+            if (typeof error === 'object') {
+                // Try to find any string property
+                for (const key of ['message', 'detail', 'error', 'msg', 'text']) {
+                    if (error[key] && typeof error[key] === 'string') {
+                        return error[key];
+                    }
+                }
+                // Last resort: return a generic message
+                return 'Une erreur s\'est produite';
+            }
+            
+            // Fallback
+            return String(error);
+        }
+
         function showNotification(message, type = 'info') {
+            // Ensure message is a string
+            const messageText = typeof message === 'string' ? message : getErrorMessage(message);
             const colors = {
                 'success': 'var(--primary)',
                 'error': 'var(--danger)',
@@ -3024,7 +3319,7 @@
             const notification = document.createElement('div');
             notification.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white fade-in z-50';
             notification.style.background = colors[type];
-            notification.textContent = message;
+            notification.textContent = messageText;
 
             document.body.appendChild(notification);
 

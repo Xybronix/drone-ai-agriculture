@@ -1129,7 +1129,7 @@
                     <hr style="border-color: var(--border);" class="my-6">
 
                     <!-- Account Stats -->
-                    <div class="card p-6">
+                    <div class="card p-6 mb-4">
                         <h3 class="font-semibold mb-4">
                             <i class="fas fa-chart-pie mr-2" style="color: var(--purple);"></i>
                             Mes Statistiques
@@ -1616,7 +1616,7 @@
                 }, 200);
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
             }
         }
@@ -1653,7 +1653,7 @@
                 }, 2000);
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
                 successEl.classList.add('hidden');
             }
@@ -2168,7 +2168,7 @@
 
             } catch (error) {
                 console.error('Analysis error:', error);
-                showNotification('Erreur lors de l\'analyse: ' + error.message, 'error');
+                showNotification('Erreur lors de l\'analyse: ' + getErrorMessage(error), 'error');
                 document.getElementById('analysisLoading').classList.add('hidden');
                 document.getElementById('analysisEmpty').classList.remove('hidden');
             }
@@ -2199,7 +2199,7 @@
 
             } catch (error) {
                 console.error('Comparison error:', error);
-                showNotification('Erreur lors de la comparaison: ' + error.message, 'error');
+                showNotification('Erreur lors de la comparaison: ' + getErrorMessage(error), 'error');
                 document.getElementById('compareLoading').classList.add('hidden');
                 document.getElementById('compareImagePreview').classList.remove('hidden');
             }
@@ -2980,7 +2980,7 @@
                 document.getElementById('newUsername').value = '';
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
             }
         }
@@ -3098,7 +3098,7 @@
                 refreshUsersList();
                 
             } catch (error) {
-                showNotification(error.message, 'error');
+                showNotification(getErrorMessage(error), 'error');
             }
         }
 
@@ -3122,7 +3122,7 @@
                 refreshUsersList();
                 
             } catch (error) {
-                showNotification(error.message, 'error');
+                showNotification(getErrorMessage(error), 'error');
             }
         }
 
@@ -3146,7 +3146,7 @@
                 refreshUsersList();
                 
             } catch (error) {
-                showNotification(error.message, 'error');
+                showNotification(getErrorMessage(error), 'error');
             }
         }
 
@@ -3187,7 +3187,7 @@
                 document.getElementById('changePasswordForm').reset();
                 
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = getErrorMessage(error);
                 errorEl.classList.remove('hidden');
             }
         }
@@ -3272,8 +3272,44 @@
         }
 
 
-        // Notifications
+        // Helper function to extract error message from various error types
+        function getErrorMessage(error) {
+            if (!error) return 'Une erreur inconnue s\'est produite';
+            
+            // If it's already a string, return it
+            if (typeof error === 'string') return error;
+            
+            // If it's an Error object, return the message
+            if (error instanceof Error) return error.message;
+            
+            // If it's an object with a message property
+            if (error.message && typeof error.message === 'string') return error.message;
+            
+            // If it's an object with a detail property (FastAPI errors)
+            if (error.detail && typeof error.detail === 'string') return error.detail;
+            
+            // If it's an object with an error property
+            if (error.error && typeof error.error === 'string') return error.error;
+            
+            // If it's an object, try to stringify it (but prefer message/detail)
+            if (typeof error === 'object') {
+                // Try to find any string property
+                for (const key of ['message', 'detail', 'error', 'msg', 'text']) {
+                    if (error[key] && typeof error[key] === 'string') {
+                        return error[key];
+                    }
+                }
+                // Last resort: return a generic message
+                return 'Une erreur s\'est produite';
+            }
+            
+            // Fallback
+            return String(error);
+        }
+
         function showNotification(message, type = 'info') {
+            // Ensure message is a string
+            const messageText = typeof message === 'string' ? message : getErrorMessage(message);
             const colors = {
                 'success': 'var(--primary)',
                 'error': 'var(--danger)',
@@ -3283,7 +3319,7 @@
             const notification = document.createElement('div');
             notification.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white fade-in z-50';
             notification.style.background = colors[type];
-            notification.textContent = message;
+            notification.textContent = messageText;
 
             document.body.appendChild(notification);
 
