@@ -1,0 +1,61 @@
+services:
+  # Service Web API
+  - type: web
+    name: drone-ai-agriculture-api
+    env: python
+    region: frankfurt  # Options: oregon, frankfurt, singapore, mumbai, sydney
+    plan: free  # Options: free, starter ($7/mois), standard ($25/mois)
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && mkdir -p data/uploads data/cache logs
+    startCommand: python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT --workers 1
+    envVars:
+      # Configuration API
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: $PORT
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      
+      # Sécurité
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRATION_HOURS
+        value: 24
+      
+      # CORS - Accepte toutes les origines (adapté pour l'URL Render)
+      - key: CORS_ORIGINS
+        value: "*"
+      
+      # Base de données SQLite (par défaut)
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./data/agriculture.db
+      
+      # Configuration AI
+      - key: AI_BACKEND
+        value: external  # Utilise Plant.id
+      - key: PLANT_ID_API_KEY
+        sync: false  # À configurer dans le dashboard Render
+      - key: EXTERNAL_AI_TIMEOUT
+        value: 30
+      - key: EXTERNAL_AI_FALLBACK
+        value: true
+      
+      # Storage
+      - key: STORAGE_TYPE
+        value: local
+      - key: LOCAL_STORAGE_PATH
+        value: ./data/uploads
+      
+      # Logging
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_FORMAT
+        value: json
+      
+      # Monitoring
+      - key: PROMETHEUS_ENABLED
+        value: true

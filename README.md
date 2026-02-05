@@ -28,6 +28,21 @@ Solution complète de surveillance agricole par drone avec **IA hébergée dans 
 - **Responsive** : Mobile, tablette, desktop
 - **Thème clair/sombre** : Adaptatif
 
+## 🚀 Déploiement
+
+### Déploiement sur Render (Recommandé)
+
+Pour déployer rapidement sur Render, consultez le [Guide de Déploiement](DEPLOY.md).
+
+**Déploiement en 3 étapes :**
+1. Connectez votre dépôt Git à Render
+2. Render détecte automatiquement `render.yaml`
+3. Configurez `PLANT_ID_API_KEY` dans les variables d'environnement
+
+Votre application sera accessible en quelques minutes !
+
+### Installation Locale
+
 ## 🚀 Quick Start (5 minutes)
 
 ### Prérequis

@@ -457,10 +457,9 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <!-- Backend Indicator -->
                     <div id="backendIndicator" class="backend-badge local">
                         <i class="fas fa-microchip"></i>
-                        <span>Local</span>
+                        <span>TensorFlow/ONNX</span>
                     </div>
 
                     <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: var(--bg-dark);">
@@ -482,7 +481,8 @@
                         </div>
                     </div>
 
-                    <button onclick="openSettings()" class="p-2 rounded-lg hover:bg-gray-700 transition">
+                    <!-- Settings button hidden for presentation -->
+                    <button onclick="openSettings()" class="p-2 rounded-lg hover:bg-gray-700 transition hidden">
                         <i class="fas fa-cog" style="color: var(--text-secondary);"></i>
                     </button>
                 </div>
@@ -492,9 +492,6 @@
             <div class="max-w-7xl mx-auto px-4 pb-4 flex gap-2 flex-wrap">
                 <button class="nav-tab active" data-tab="analyze" onclick="switchTab('analyze')">
                     <i class="fas fa-microscope mr-2"></i>Analyser
-                </button>
-                <button class="nav-tab" data-tab="compare" onclick="switchTab('compare')">
-                    <i class="fas fa-balance-scale mr-2"></i>Comparer
                 </button>
                 <button class="nav-tab" data-tab="webcam" onclick="switchTab('webcam')">
                     <i class="fas fa-video mr-2"></i>Webcam
@@ -523,32 +520,23 @@
                             Analyser une Image
                         </h2>
 
-                        <!-- Backend Selector -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
                                 Méthode d'analyse
                             </label>
-                            <div class="backend-selector">
-                                <div class="backend-option active" data-backend="local" onclick="selectBackend('local')">
-                                    <i class="fas fa-microchip" style="color: var(--primary);"></i>
-                                    <span>Modèle Local</span>
-                                    <p class="text-xs mt-1" style="color: var(--text-secondary);">TensorFlow/ONNX</p>
-                                </div>
-                                <div class="backend-option" data-backend="external" onclick="selectBackend('external')">
-                                    <i class="fas fa-cloud" style="color: var(--purple);"></i>
-                                    <span>Plant.id</span>
-                                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Service externe</p>
-                                </div>
-                                <div class="backend-option" data-backend="auto" onclick="selectBackend('auto')">
-                                    <i class="fas fa-magic" style="color: var(--accent);"></i>
-                                    <span>Auto</span>
-                                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Fallback</p>
+                            <div class="p-4 rounded-lg mb-4" style="background: var(--bg-dark); border: 1px solid var(--border);">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-microchip text-2xl" style="color: var(--primary);"></i>
+                                    <div>
+                                        <p class="font-semibold">TensorFlow/ONNX</p>
+                                        <p class="text-xs mt-1" style="color: var(--text-secondary);">Modèle entraîné</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="geolocationSection" class="mb-4 hidden">
+                            <div id="geolocationSection" class="mb-4">
                                 <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
                                     <i class="fas fa-map-marker-alt mr-2" style="color: var(--accent);"></i>
-                                    Géolocalisation (Plant.id uniquement)
+                                    Géolocalisation (optionnelle)
                                     <span id="geolocationStatus" class="text-xs ml-2" style="color: var(--text-secondary);">
                                         <i class="fas fa-circle text-yellow-500"></i> Inactive
                                     </span>
@@ -614,7 +602,7 @@
                             Résultats d'Analyse
                             <span id="resultBackendBadge" class="backend-badge local ml-2 hidden">
                                 <i class="fas fa-microchip"></i>
-                                <span>Local</span>
+                                <span>TensorFlow/ONNX</span>
                             </span>
                         </h2>
 
@@ -632,7 +620,7 @@
 
                         <!-- Results -->
                         <div id="analysisResults" class="hidden space-y-4">
-                            <!-- Plant Image (for Plant.id) -->
+                            <!-- Plant Image -->
                             <div id="resultPlantImageContainer" class="result-item p-4 rounded-lg hidden" style="background: var(--bg-dark);">
                                 <h3 class="font-semibold mb-3">
                                     <i class="fas fa-image mr-2" style="color: var(--purple);"></i>
@@ -683,7 +671,6 @@
                                     <span id="resultHealth" class="status-badge">-</span>
                                 </div>
                                 <p id="resultHealthDetails" class="text-sm mt-2" style="color: var(--text-secondary);"></p>
-                                <!-- External AI Disease Details -->
                                 <div id="resultDiseaseDetails" class="hidden mt-3 p-3 rounded-lg" style="background: var(--bg-card);">
                                     <h4 class="text-sm font-semibold mb-2"><i class="fas fa-virus mr-1"></i> Détails Maladie</h4>
                                     <div id="resultDiseaseList" class="space-y-2"></div>
@@ -702,78 +689,6 @@
                             <div class="result-item p-4 rounded-lg border-2" style="background: var(--bg-dark); border-color: var(--primary);">
                                 <h3 class="font-semibold mb-3"><i class="fas fa-lightbulb mr-2" style="color: var(--accent);"></i>Recommandations</h3>
                                 <div id="resultRecommendations" class="space-y-2"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Compare Tab -->
-            <div id="tab-compare" class="tab-content hidden">
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4">
-                        <i class="fas fa-balance-scale mr-2" style="color: var(--accent);"></i>
-                        Comparer les Méthodes d'Analyse
-                    </h2>
-                    <p class="mb-6" style="color: var(--text-secondary);">
-                        Analysez une image avec les deux méthodes (locale et externe) pour comparer les résultats.
-                    </p>
-
-                    <div id="compareUploadZone" class="upload-zone mb-6" onclick="document.getElementById('compareFileInput').click()">
-                        <input type="file" id="compareFileInput" accept="image/*" class="hidden" onchange="handleCompareFileSelect(event)">
-                        <i class="fas fa-images text-5xl mb-4" style="color: var(--accent);"></i>
-                        <p class="text-lg font-medium mb-2">Sélectionnez une image à comparer</p>
-                        <p style="color: var(--text-secondary);">Les deux méthodes seront utilisées</p>
-                    </div>
-
-                    <!-- Compare Image Preview -->
-                    <div id="compareImagePreview" class="hidden mb-6">
-                        <img id="comparePreviewImg" src="" alt="Preview" class="w-full rounded-lg max-h-48 object-contain bg-gray-900 mb-4">
-                        <div class="flex gap-2">
-                            <button onclick="runComparison()" class="btn-primary flex-1">
-                                <i class="fas fa-play mr-2"></i>Lancer la comparaison
-                            </button>
-                            <button onclick="clearCompare()" class="btn-secondary">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Compare Loading -->
-                    <div id="compareLoading" class="hidden text-center py-8">
-                        <div class="flex justify-center gap-8">
-                            <div class="text-center">
-                                <div class="loader mb-2 mx-auto"></div>
-                                <p class="text-sm" style="color: var(--text-secondary);">Local</p>
-                            </div>
-                            <div class="text-center">
-                                <div class="loader purple mb-2 mx-auto"></div>
-                                <p class="text-sm" style="color: var(--text-secondary);">Plant.id</p>
-                            </div>
-                        </div>
-                        <p class="mt-4" style="color: var(--text-secondary);">Analyse en cours...</p>
-                    </div>
-
-                    <!-- Compare Results -->
-                    <div id="compareResults" class="hidden">
-                        <div class="compare-results">
-                            <!-- Local Results -->
-                            <div class="compare-column local">
-                                <h3 class="font-semibold mb-3 flex items-center">
-                                    <i class="fas fa-microchip mr-2" style="color: var(--primary);"></i>
-                                    Modèle Local
-                                    <span id="compareLocalTime" class="ml-auto text-xs mono" style="color: var(--text-secondary);"></span>
-                                </h3>
-                                <div id="compareLocalResults" class="space-y-2"></div>
-                            </div>
-                            <!-- External Results -->
-                            <div class="compare-column external">
-                                <h3 class="font-semibold mb-3 flex items-center">
-                                    <i class="fas fa-cloud mr-2" style="color: var(--purple);"></i>
-                                    Plant.id
-                                    <span id="compareExternalTime" class="ml-auto text-xs mono" style="color: var(--text-secondary);"></span>
-                                </h3>
-                                <div id="compareExternalResults" class="space-y-2"></div>
                             </div>
                         </div>
                     </div>
@@ -1227,30 +1142,15 @@
                     </h4>
 
                     <div>
-                        <label class="block text-sm font-medium mb-2">Backend par défaut</label>
-                        <select id="defaultBackendSelect">
-                            <option value="local">Modèle Local (TensorFlow/ONNX)</option>
-                            <option value="external">Service Externe (Plant.id)</option>
-                            <option value="auto">Auto (Local avec fallback)</option>
-                        </select>
-                    </div>
-
-                    <div class="p-4 rounded-lg" style="background: var(--bg-dark);">
-                        <h5 class="font-medium mb-2 flex items-center gap-2">
-                            <i class="fas fa-cloud" style="color: var(--purple);"></i>
-                            Plant.id API
-                        </h5>
-                        <p class="text-sm mb-3" style="color: var(--text-secondary);">
-                            Service gratuit: 100-200 requêtes/jour sans engagement.
-                            <a href="https://plant.id/" target="_blank" class="underline" style="color: var(--purple);">
-                                Obtenir une clé gratuite →
-                            </a>
-                        </p>
-                        <div id="plantIdStatus" class="text-sm flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                            <span style="color: var(--text-secondary);">Vérification...</span>
+                        <label class="block text-sm font-medium mb-2">Méthode d'analyse</label>
+                        <div class="p-3 rounded-lg" style="background: var(--bg-dark); border: 1px solid var(--border);">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-microchip" style="color: var(--primary);"></i>
+                                <span>TensorFlow/ONNX (Modèle entraîné)</span>
+                            </div>
                         </div>
                     </div>
+
 
                     <button onclick="saveSettings()" class="btn-primary w-full mt-6">
                         <i class="fas fa-save mr-2"></i>Enregistrer
@@ -1393,7 +1293,6 @@
         let config = {
             apiUrl: window.location.origin,
             apiKey: '',
-            defaultBackend: 'local'
         };
 
         let currentUser = null;
@@ -1403,9 +1302,8 @@
         let currentLongitude = null;
         let currentFile = null;
         let currentModalImage = null;
-        let compareFile = null;
         let webcamStream = null;
-        let selectedBackend = 'local';
+        let selectedBackend = 'external';
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -1426,10 +1324,9 @@
             // Load settings
             document.getElementById('apiUrlInput').value = config.apiUrl;
             document.getElementById('apiKeyInput').value = config.apiKey;
-            document.getElementById('defaultBackendSelect').value = config.defaultBackend;
 
-            // Set initial backend
-            selectBackend(config.defaultBackend);
+            selectedBackend = 'external';
+            updateBackendDisplay();
 
             // Update auth UI
             updateAuthUI();
@@ -1800,47 +1697,23 @@
             if (e.target.id === 'registerModal') closeRegisterModal();
         });
 
-        // Backend selection
-        function selectBackend(backend) {
-            selectedBackend = backend;
+        function updateBackendDisplay() {
+            selectedBackend = 'external';
 
-            // Update UI
-            document.querySelectorAll('.backend-option').forEach(opt => {
-                opt.classList.remove('active', 'external', 'auto');
-                if (opt.dataset.backend === backend) {
-                    opt.classList.add('active');
-                    if (backend === 'external') opt.classList.add('external');
-                    if (backend === 'auto') opt.classList.add('auto');
-                }
-            });
-
-            // Update header indicator
+            // Update header indicator to show TensorFlow/ONNX
             const indicator = document.getElementById('backendIndicator');
-            indicator.className = `backend-badge ${backend}`;
-
-            const icons = { local: 'fa-microchip', external: 'fa-cloud', auto: 'fa-magic' };
-            const labels = { local: 'Local', external: 'Plant.id', auto: 'Auto' };
-
-            indicator.innerHTML = `<i class="fas ${icons[backend]}"></i><span>${labels[backend]}</span>`;
+            indicator.className = 'backend-badge local';
+            indicator.innerHTML = `<i class="fas fa-microchip"></i><span>TensorFlow/ONNX</span>`;
 
             // Update analyze button style
             const btnAnalyze = document.getElementById('btnAnalyze');
             if (btnAnalyze) {
-                if (backend === 'external') {
-                    btnAnalyze.className = 'btn-purple flex-1';
-                } else {
-                    btnAnalyze.className = 'btn-primary flex-1';
-                }
+                btnAnalyze.className = 'btn-primary flex-1';
             }
 
-            // Display/hide geolocation section
+            // Always show geolocation section
             const geolocationSection = document.getElementById('geolocationSection');
-            if (backend === 'external') {
-                geolocationSection.classList.remove('hidden');
-            } else {
-                geolocationSection.classList.add('hidden');
-                clearLocation();
-            }
+            geolocationSection.classList.remove('hidden');
         }
 
         // Function to get current location
@@ -2118,26 +1991,18 @@
             document.getElementById('analysisResults').classList.add('hidden');
             document.getElementById('analysisLoading').classList.remove('hidden');
 
-            // Update loading style based on backend
             const loader = document.getElementById('analysisLoader');
             const loadingText = document.getElementById('analysisLoadingText');
 
-            if (selectedBackend === 'external') {
-                loader.classList.add('purple');
-                loadingText.textContent = 'Analyse via Plant.id...';
-            } else if (selectedBackend === 'auto') {
-                loadingText.textContent = 'Analyse (auto-fallback)...';
-            } else {
-                loader.classList.remove('purple');
-                loadingText.textContent = 'Analyse locale...';
-            }
+            loader.classList.remove('purple');
+            loadingText.textContent = 'Analyse avec TensorFlow/ONNX...';
 
             try {
                 const formData = new FormData();
                 formData.append('image', currentFile);
                 formData.append('backend', selectedBackend);
 
-                if (selectedBackend === 'external' && (useGeolocation || getManualLocation())) {
+                if (useGeolocation || getManualLocation()) {
                     if (currentLatitude && currentLongitude) {
                         formData.append('latitude', currentLatitude);
                         formData.append('longitude', currentLongitude);
@@ -2175,7 +2040,6 @@
         }
 
 
-        // Run comparison (both backends)
         async function runComparison() {
             if (!compareFile) return;
 
@@ -2233,7 +2097,6 @@
             document.getElementById('compareLocalTime').textContent =
                 `${Math.round(localResult.metadata?.inference_time_ms || 0)}ms`;
 
-            // Display external results
             const externalContainer = document.getElementById('compareExternalResults');
             externalContainer.innerHTML = formatCompareResult(externalResult);
             document.getElementById('compareExternalTime').textContent =
@@ -2316,21 +2179,17 @@
                 oldSimilarContainer.remove();
             }
 
-            // Show backend badge
             const backendBadge = document.getElementById('resultBackendBadge');
             const usedBackend = result.metadata?.backend || selectedBackend;
 
-            backendBadge.className = `backend-badge ${usedBackend} ml-2`;
-            const icons = { local: 'fa-microchip', external: 'fa-cloud', auto: 'fa-magic', 'plant.id': 'fa-cloud' };
-            const labels = { local: 'Local', external: 'Plant.id', auto: 'Auto', 'plant.id': 'Plant.id' };
-
-            backendBadge.innerHTML = `<i class="fas ${icons[usedBackend] || 'fa-robot'}"></i><span>${labels[usedBackend] || usedBackend}</span>`;
+            backendBadge.className = 'backend-badge local ml-2';
+            backendBadge.innerHTML = `<i class="fas fa-microchip"></i><span>TensorFlow/ONNX</span>`;
             backendBadge.classList.remove('hidden');
 
-            // Show plant image for Plant.id analyses
+            // Always show plant image
             const plantImageContainer = document.getElementById('resultPlantImageContainer');
             const plantImage = document.getElementById('resultPlantImage');
-            if ((usedBackend === 'plant.id' || usedBackend === 'external') && document.getElementById('previewImg').src) {
+            if (document.getElementById('previewImg').src) {
                 plantImage.src = document.getElementById('previewImg').src;
                 plantImageContainer.classList.remove('hidden');
             } else {
@@ -2352,7 +2211,8 @@
             document.getElementById('resultSpecies').textContent = species;
             document.getElementById('resultSpeciesConfidence').style.width = `${speciesConf}%`;
 
-            if (result.species_identification?.top_suggestions?.length > 0 && (result.metadata?.backend === 'plant.id' || result.metadata?.backend === 'external')) {
+            // Always show similar images
+            if (result.species_identification?.top_suggestions?.length > 0) {
                 
                 const speciesContainer = document.querySelector('[id^="resultSpecies"]').closest('.result-item');
                 
@@ -2456,7 +2316,6 @@
                 });
             }
 
-            // Show scientific name if available (external API)
             const scientificEl = document.getElementById('resultSpeciesScientific');
             if (result.species_identification?.scientific_name) {
                 scientificEl.textContent = `Nom scientifique: ${result.species_identification.scientific_name}`;
@@ -2493,7 +2352,6 @@
             }
             document.getElementById('resultHealthDetails').textContent = healthDetails;
 
-            // Disease details (from external API)
             const diseaseDetailsEl = document.getElementById('resultDiseaseDetails');
             const diseaseListEl = document.getElementById('resultDiseaseList');
 
@@ -2647,8 +2505,8 @@
             }
 
             tbody.innerHTML = entries.map(entry => {
-                const backend = entry.backend || 'local';
-                const backendClass = backend === 'external' || backend === 'plant.id' ? 'status-external' : 'status-healthy';
+                // Always display as TensorFlow/ONNX
+                const backendClass = 'status-healthy';
 
                 return `
                     <tr class="history-row border-b" style="border-color: var(--border);">
@@ -2662,7 +2520,7 @@
                         </td>
                         <td class="py-3 px-4">
                             <span class="status-badge ${backendClass}">
-                                ${backend === 'external' || backend === 'plant.id' ? 'Plant.id' : 'Local'}
+                                TensorFlow/ONNX
                             </span>
                         </td>
                         <td class="py-3 px-4">
@@ -3196,52 +3054,18 @@
         // Settings
         function openSettings() {
             document.getElementById('settingsModal').classList.add('active');
-            checkPlantIdStatus();
         }
 
         function closeSettings() {
             document.getElementById('settingsModal').classList.remove('active');
         }
 
-        async function checkPlantIdStatus() {
-            const statusEl = document.getElementById('plantIdStatus');
-
-            try {
-                const response = await fetch(`${config.apiUrl}/api/v1/analyze/backends`);
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const externalAvailable = data.backends?.external?.available;
-
-                    if (externalAvailable) {
-                        statusEl.innerHTML = `
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span style="color: var(--primary);">Configuré et disponible</span>
-                        `;
-                    } else {
-                        statusEl.innerHTML = `
-                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                            <span style="color: var(--accent);">Non configuré (mode simulation)</span>
-                        `;
-                    }
-                } else {
-                    throw new Error('API error');
-                }
-            } catch (error) {
-                statusEl.innerHTML = `
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                    <span style="color: var(--danger);">Impossible de vérifier</span>
-                `;
-            }
-        }
-
         function saveSettings() {
             config.apiUrl = document.getElementById('apiUrlInput').value || 'http://localhost:8000';
             config.apiKey = document.getElementById('apiKeyInput').value;
-            config.defaultBackend = document.getElementById('defaultBackendSelect').value;
-
-            // Apply default backend
-            selectBackend(config.defaultBackend);
+            
+            selectedBackend = 'external';
+            updateBackendDisplay();
 
             closeSettings();
             checkConnection();
