@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -53,8 +53,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY api/ ./api/
 COPY ml/ ./ml/
 COPY scripts/ ./scripts/
-RUN mkdir -p ./models/ || true
-COPY models/ ./models/
+# Modèles entraînés (output/models/) → ./models/ attendu par l'API
+COPY output/models/ ./models/
 
 # Create necessary directories
 RUN mkdir -p /app/data /app/logs /app/models /app/data/uploads && \
